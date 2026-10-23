@@ -32,6 +32,19 @@ describe("parse", () => {
     expect(parse("heel hook then toe hook").beats.map(say)).toEqual(["Heel hook.", "Toe hook."]);
   });
 
+  it("traces every token with how it was read", () => {
+    expect(parse("lh on the sloppr jugg, then fire up").trace.map(t => [t.text, t.kind, t.key ?? null])).toEqual([
+      ["lh", "limb", null],
+      ["on", "prep", null],
+      ["the", "stop", null],
+      ["sloppr", "term", "sloper"],
+      ["jugg", "unknown", null],
+      [",", "split", null],
+      ["then", "split", null],
+      ["fire up", "term", "fire up"],
+    ]);
+  });
+
   it("returns nothing for empty text", () => {
     expect(parse("")).toMatchObject({ beats: [], unknown: [], amb: [] });
   });
