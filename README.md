@@ -9,3 +9,14 @@ Status: early research and development. See `PLAN.md`.
 ## Licence
 
 Source-available under the [Beta Interpreter Noncommercial Licence](LICENSE.md). It is not an open-source licence: commercial use is not permitted.
+
+## Development
+
+```bash
+pnpm install
+pnpm test
+pnpm typecheck
+pnpm lint
+```
+
+The vocabulary lives in `vocabulary/terms.json` (taxonomy terms) and `vocabulary/words.json` (limbs, prepositions, crux markers, stop words and step breaks). Changing the interpreter's vocabulary means changing those files, not the code.

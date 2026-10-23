@@ -1,0 +1,30 @@
+{
+  "name": "beta-interpreter",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Rule-based interpreter that turns free-text climbing beta into a structured record.",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "type": "module",
+  "packageManager": "pnpm@12.14.0",
+  "exports": {
+    ".": "./src/index.js",
+    "./vocabulary/*": "./vocabulary/*"
+  },
+  "files": [
+    "src",
+    "vocabulary",
+    "LICENSE.md",
+    "LICENSE-SCHEDULE.md"
+  ],
+  "scripts": {
+    "lint": "biome check --error-on-warnings .",
+    "format": "biome format --write .",
+    "typecheck": "tsc -p .",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "typescript": "7.0.2",
+    "vitest": "5.0.5"
+  }
+}

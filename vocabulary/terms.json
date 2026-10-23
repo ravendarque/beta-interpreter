@@ -1,0 +1,761 @@
+{
+  "terms": [
+    {
+      "id": "vert",
+      "name": "Vert",
+      "facets": ["terrain"],
+      "match": ["vert", "vertical", "face"]
+    },
+    {
+      "id": "slab",
+      "name": "Slab",
+      "facets": ["terrain"],
+      "match": ["slab", "slabby"]
+    },
+    {
+      "id": "overhang",
+      "name": "Overhang",
+      "facets": ["terrain"],
+      "match": ["overhang", "overhanging", "overhung", "steep", "cave"]
+    },
+    {
+      "id": "roof",
+      "name": "Roof",
+      "facets": ["terrain"],
+      "match": ["roof", "ceiling"]
+    },
+    {
+      "id": "chimney-dihedral",
+      "name": "Chimney/Dihedral",
+      "facets": ["terrain"],
+      "match": ["chimney", "dihedral", "corner", "groove"]
+    },
+    {
+      "id": "dish",
+      "name": "Dish",
+      "facets": ["feature"],
+      "match": ["dish"]
+    },
+    {
+      "id": "rail",
+      "name": "Rail",
+      "facets": ["feature"],
+      "match": ["rail"]
+    },
+    {
+      "id": "crease",
+      "name": "Crease",
+      "facets": ["feature"],
+      "match": ["crease"]
+    },
+    {
+      "id": "seam",
+      "name": "Seam",
+      "facets": ["feature"],
+      "match": ["seam"]
+    },
+    {
+      "id": "slot",
+      "name": "Slot",
+      "facets": ["feature", "hold"],
+      "match": ["slot"]
+    },
+    {
+      "id": "texture",
+      "name": "Texture",
+      "facets": ["feature"],
+      "match": ["texture"]
+    },
+    {
+      "id": "horn",
+      "name": "Horn",
+      "facets": ["feature"],
+      "match": ["horn"]
+    },
+    {
+      "id": "pebble",
+      "name": "Pebble",
+      "facets": ["feature", "hold"],
+      "match": ["pebble", "jib", "chip"]
+    },
+    {
+      "id": "flake",
+      "name": "Flake",
+      "facets": ["feature"],
+      "match": ["flake"]
+    },
+    {
+      "id": "ledge",
+      "name": "Ledge",
+      "facets": ["feature"],
+      "match": ["ledge"]
+    },
+    {
+      "id": "tufa",
+      "name": "Tufa",
+      "facets": ["feature"],
+      "match": ["tufa"]
+    },
+    {
+      "id": "crescent",
+      "name": "Crescent",
+      "facets": ["feature"],
+      "match": ["crescent"]
+    },
+    {
+      "id": "lip",
+      "name": "Lip",
+      "facets": ["feature"],
+      "match": ["lip"]
+    },
+    {
+      "id": "arete",
+      "name": "Arête",
+      "facets": ["feature"],
+      "match": ["arête"]
+    },
+    {
+      "id": "edge",
+      "name": "Edge",
+      "facets": ["feature"],
+      "match": ["edge"]
+    },
+    {
+      "id": "crack",
+      "name": "Crack",
+      "facets": ["feature"],
+      "match": ["crack"]
+    },
+    {
+      "id": "offwidth",
+      "name": "Offwidth",
+      "facets": ["feature"],
+      "parent": "crack",
+      "match": ["offwidth", "ow", "off width"]
+    },
+    {
+      "id": "chimney",
+      "name": "Chimney",
+      "facets": ["feature"],
+      "parent": "crack",
+      "match": ["chimney"]
+    },
+    {
+      "id": "squeeze-chimney",
+      "name": "Squeeze chimney",
+      "facets": ["feature"],
+      "parent": "chimney",
+      "match": ["squeeze chimney"]
+    },
+    {
+      "id": "full-chimney",
+      "name": "Full chimney",
+      "facets": ["feature"],
+      "parent": "chimney",
+      "match": ["full chimney"]
+    },
+    {
+      "id": "jug",
+      "name": "Jug",
+      "facets": ["hold"],
+      "match": ["jug", "bucket"]
+    },
+    {
+      "id": "sloper",
+      "name": "Sloper",
+      "facets": ["hold"],
+      "match": ["sloper", "slopey", "slopy"]
+    },
+    {
+      "id": "crimp",
+      "name": "Crimp",
+      "facets": ["hold", "position"],
+      "region": "upper",
+      "part": "hand",
+      "match": ["crimp", "crimpy", "crimper"]
+    },
+    {
+      "id": "flatty",
+      "name": "Flatty",
+      "facets": ["hold"],
+      "match": ["flatty", "flattie"]
+    },
+    {
+      "id": "pocket",
+      "name": "Pocket",
+      "facets": ["hold"],
+      "match": ["pocket"]
+    },
+    {
+      "id": "mono",
+      "name": "Mono",
+      "facets": ["hold"],
+      "parent": "pocket",
+      "match": ["mono"]
+    },
+    {
+      "id": "two-finger-pocket",
+      "name": "Two finger pocket",
+      "facets": ["hold"],
+      "parent": "pocket",
+      "match": ["two finger pocket", "two finger", "2 finger"]
+    },
+    {
+      "id": "three-finger-pocket",
+      "name": "Three finger pocket",
+      "facets": ["hold"],
+      "parent": "pocket",
+      "match": ["three finger pocket", "three finger", "3 finger"]
+    },
+    {
+      "id": "pinch",
+      "name": "Pinch",
+      "facets": ["hold"],
+      "match": ["pinch", "pinchy"]
+    },
+    {
+      "id": "upright",
+      "name": "Upright",
+      "facets": ["orientation"],
+      "match": ["upright"]
+    },
+    {
+      "id": "sidepull",
+      "name": "Sidepull",
+      "facets": ["orientation", "position"],
+      "region": "upper",
+      "part": "hand",
+      "match": ["sidepull", "side pull"]
+    },
+    {
+      "id": "undercling",
+      "name": "Undercling",
+      "facets": ["orientation", "position"],
+      "region": "upper",
+      "part": "hand",
+      "match": ["undercling", "undercut"]
+    },
+    {
+      "id": "gaston",
+      "name": "Gaston",
+      "facets": ["orientation", "position"],
+      "region": "upper",
+      "part": "hand",
+      "match": ["gaston"]
+    },
+    {
+      "id": "guppy",
+      "name": "Guppy",
+      "facets": ["position"],
+      "region": "upper",
+      "part": "hand",
+      "match": ["guppy", "guppie"]
+    },
+    {
+      "id": "drag",
+      "name": "Drag",
+      "facets": ["position"],
+      "region": "upper",
+      "part": "hand",
+      "match": ["drag"]
+    },
+    {
+      "id": "half-crimp",
+      "name": "Half crimp",
+      "facets": ["position"],
+      "region": "upper",
+      "part": "hand",
+      "parent": "crimp",
+      "match": ["half crimp"]
+    },
+    {
+      "id": "full-crimp",
+      "name": "Full crimp",
+      "facets": ["position"],
+      "region": "upper",
+      "part": "hand",
+      "parent": "crimp",
+      "match": ["full crimp", "closed crimp"]
+    },
+    {
+      "id": "chisel",
+      "name": "Chisel",
+      "facets": ["position"],
+      "region": "upper",
+      "part": "hand",
+      "parent": "crimp",
+      "match": ["chisel"]
+    },
+    {
+      "id": "stacked",
+      "name": "Stacked",
+      "facets": ["position"],
+      "region": "upper",
+      "part": "hand",
+      "parent": "crimp",
+      "match": ["stacked", "stacked crimp"]
+    },
+    {
+      "id": "palm-down",
+      "name": "Palm down",
+      "facets": ["position"],
+      "region": "upper",
+      "part": "hand",
+      "match": ["palm down", "palm", "palming"]
+    },
+    {
+      "id": "compression-hands",
+      "name": "Compression (hands)",
+      "facets": ["position"],
+      "region": "upper",
+      "part": "hand",
+      "match": ["compression", "squeeze", "squeezing"]
+    },
+    {
+      "id": "layback",
+      "name": "Layback",
+      "facets": ["position"],
+      "region": "upper",
+      "part": "hand",
+      "match": ["layback", "lieback", "layaway", "laybacking"]
+    },
+    {
+      "id": "jam-hand",
+      "name": "Jam (hand)",
+      "facets": ["position"],
+      "region": "upper",
+      "part": "hand",
+      "match": ["jam", "hand jam", "finger jam", "fist jam", "finger lock"]
+    },
+    {
+      "id": "arm-bar",
+      "name": "Arm bar",
+      "facets": ["position"],
+      "region": "upper",
+      "part": "hand",
+      "match": ["arm bar", "armbar"]
+    },
+    {
+      "id": "chicken-wing",
+      "name": "Chicken wing",
+      "facets": ["position"],
+      "region": "upper",
+      "part": "hand",
+      "match": ["chicken wing"]
+    },
+    {
+      "id": "thumb-press",
+      "name": "Thumb press",
+      "facets": ["position"],
+      "region": "upper",
+      "part": "hand",
+      "match": ["thumb press", "thumb"]
+    },
+    {
+      "id": "lock-off",
+      "name": "Lock-off",
+      "facets": ["position"],
+      "region": "upper",
+      "part": "hand",
+      "match": ["lock-off", "lockoff", "lock", "locked off"]
+    },
+    {
+      "id": "match",
+      "name": "Match",
+      "facets": ["position"],
+      "region": "upper",
+      "part": "hand",
+      "match": ["match", "matched"]
+    },
+    {
+      "id": "cut-loose",
+      "name": "Cut-loose",
+      "facets": ["position"],
+      "region": "upper",
+      "part": "hand",
+      "match": ["cut loose", "cutloose", "cutting loose"]
+    },
+    {
+      "id": "heel-hook",
+      "name": "Heel hook",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "foot",
+      "match": ["heel hook", "heel", "heelhook"]
+    },
+    {
+      "id": "frog",
+      "name": "Frog",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "foot",
+      "match": ["frog"]
+    },
+    {
+      "id": "bicycle",
+      "name": "Bicycle",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "foot",
+      "match": ["bicycle", "bike"]
+    },
+    {
+      "id": "toe-hook",
+      "name": "Toe hook",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "foot",
+      "match": ["toe hook", "toe", "toehook"]
+    },
+    {
+      "id": "bat-hang",
+      "name": "Bat hang",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "foot",
+      "match": ["bat hang"]
+    },
+    {
+      "id": "flag",
+      "name": "Flag",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "foot",
+      "match": ["flag", "flagging"]
+    },
+    {
+      "id": "inside-flag",
+      "name": "Inside flag",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "foot",
+      "parent": "flag",
+      "match": ["inside flag"]
+    },
+    {
+      "id": "back-flag",
+      "name": "Back flag",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "foot",
+      "parent": "flag",
+      "match": ["back flag"]
+    },
+    {
+      "id": "sit",
+      "name": "Sit",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "foot",
+      "match": []
+    },
+    {
+      "id": "toe-sit",
+      "name": "Toe sit",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "foot",
+      "parent": "sit",
+      "match": ["toe sit"]
+    },
+    {
+      "id": "heel-sit",
+      "name": "Heel sit",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "foot",
+      "parent": "sit",
+      "match": ["heel sit"]
+    },
+    {
+      "id": "cam",
+      "name": "Cam",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "foot",
+      "match": ["cam", "heel toe", "heel toe cam", "toe cam"]
+    },
+    {
+      "id": "jam-wedge",
+      "name": "Jam/Wedge",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "foot",
+      "match": ["jam", "foot jam", "wedge", "toe jam"]
+    },
+    {
+      "id": "bridge",
+      "name": "Bridge",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "foot",
+      "match": ["bridge", "bridging"]
+    },
+    {
+      "id": "smear",
+      "name": "Smear",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "foot",
+      "match": ["smear", "smearing"]
+    },
+    {
+      "id": "stand",
+      "name": "Stand",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "foot",
+      "match": []
+    },
+    {
+      "id": "point",
+      "name": "Point",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "foot",
+      "parent": "stand",
+      "match": ["point"]
+    },
+    {
+      "id": "outside-edge",
+      "name": "Outside edge",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "foot",
+      "parent": "stand",
+      "match": ["outside edge"]
+    },
+    {
+      "id": "inside-edge",
+      "name": "Inside edge",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "foot",
+      "parent": "stand",
+      "match": ["inside edge"]
+    },
+    {
+      "id": "knee-bar",
+      "name": "Knee bar",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "leg",
+      "match": ["knee bar", "kneebar"]
+    },
+    {
+      "id": "knee-scum",
+      "name": "Knee scum",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "leg",
+      "match": ["knee scum", "scum"]
+    },
+    {
+      "id": "compression-legs",
+      "name": "Compression (legs)",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "leg",
+      "match": ["compression", "leg compression"]
+    },
+    {
+      "id": "drop-knee",
+      "name": "Drop knee",
+      "facets": ["position"],
+      "region": "lower",
+      "part": "leg",
+      "match": ["drop knee", "dropknee", "egyptian"]
+    },
+    {
+      "id": "body-jam",
+      "name": "Body jam",
+      "facets": ["position"],
+      "region": "full",
+      "part": "body",
+      "match": ["body jam"]
+    },
+    {
+      "id": "overhead-press",
+      "name": "Overhead press",
+      "facets": ["position"],
+      "region": "full",
+      "part": "body",
+      "match": ["overhead press"]
+    },
+    {
+      "id": "paddle",
+      "name": "Paddle",
+      "facets": ["transition"],
+      "region": "upper",
+      "match": ["paddle"]
+    },
+    {
+      "id": "double-catch",
+      "name": "Double catch",
+      "facets": ["transition"],
+      "region": "upper",
+      "match": ["double catch"]
+    },
+    {
+      "id": "ghost-match",
+      "name": "Ghost match",
+      "facets": ["transition"],
+      "region": "upper",
+      "match": ["ghost match", "houdini", "houdini match"]
+    },
+    {
+      "id": "rollover",
+      "name": "Rollover",
+      "facets": ["transition"],
+      "region": "upper",
+      "match": ["rollover", "roll over"]
+    },
+    {
+      "id": "rose-move",
+      "name": "Rose move",
+      "facets": ["transition"],
+      "region": "upper",
+      "match": ["rose move", "rose", "cross through"]
+    },
+    {
+      "id": "crossover",
+      "name": "Crossover",
+      "facets": ["transition"],
+      "region": "upper",
+      "match": ["crossover", "cross", "cross over", "crossed"]
+    },
+    {
+      "id": "campus",
+      "name": "Campus",
+      "facets": ["transition"],
+      "region": "upper",
+      "match": ["campus"]
+    },
+    {
+      "id": "muscle-up",
+      "name": "Muscle up",
+      "facets": ["transition"],
+      "region": "upper",
+      "match": ["muscle up"]
+    },
+    {
+      "id": "deadpoint",
+      "name": "Deadpoint",
+      "facets": ["transition"],
+      "region": "upper",
+      "match": ["deadpoint", "dead point"]
+    },
+    {
+      "id": "dyno",
+      "name": "Dyno",
+      "facets": ["transition"],
+      "region": "upper",
+      "match": ["dyno", "dynoed"]
+    },
+    {
+      "id": "jump",
+      "name": "Jump",
+      "facets": ["transition"],
+      "region": "lower",
+      "match": ["jump"]
+    },
+    {
+      "id": "hop",
+      "name": "Hop",
+      "facets": ["transition"],
+      "region": "lower",
+      "match": ["hop"]
+    },
+    {
+      "id": "step-through",
+      "name": "Step through",
+      "facets": ["transition"],
+      "region": "lower",
+      "match": ["step through"]
+    },
+    {
+      "id": "step-behind",
+      "name": "Step behind",
+      "facets": ["transition"],
+      "region": "lower",
+      "match": ["step behind"]
+    },
+    {
+      "id": "pogo",
+      "name": "Pogo",
+      "facets": ["transition"],
+      "region": "lower",
+      "match": ["pogo"]
+    },
+    {
+      "id": "wall-run",
+      "name": "Wall run",
+      "facets": ["transition"],
+      "region": "lower",
+      "match": ["wall run"]
+    },
+    {
+      "id": "lemay",
+      "name": "Lemay",
+      "facets": ["transition"],
+      "region": "lower",
+      "match": ["lemay"]
+    },
+    {
+      "id": "pistol-squat",
+      "name": "Pistol squat",
+      "facets": ["transition"],
+      "region": "lower",
+      "match": ["pistol squat"]
+    },
+    {
+      "id": "footswap",
+      "name": "Footswap",
+      "facets": ["transition"],
+      "region": "lower",
+      "match": ["footswap", "foot swap"]
+    },
+    {
+      "id": "rockover",
+      "name": "Rockover",
+      "facets": ["transition"],
+      "region": "full",
+      "match": ["rockover", "rock over", "rocked over", "rock up"]
+    },
+    {
+      "id": "mantle",
+      "name": "Mantle",
+      "facets": ["transition"],
+      "region": "full",
+      "match": ["mantle", "mantel"]
+    },
+    {
+      "id": "lache",
+      "name": "Lache",
+      "facets": ["transition"],
+      "region": "full",
+      "match": ["lache"]
+    },
+    {
+      "id": "stem",
+      "name": "Stem",
+      "facets": ["transition"],
+      "region": "full",
+      "match": ["stem", "stemming"]
+    },
+    {
+      "id": "back-and-foot-chimney",
+      "name": "Back-and-foot chimney",
+      "facets": ["transition"],
+      "region": "full",
+      "match": ["back and foot chimney", "back and foot"]
+    },
+    {
+      "id": "fridge",
+      "name": "Fridge",
+      "facets": ["transition"],
+      "region": "full",
+      "match": ["fridge", "hug"]
+    }
+  ]
+}
