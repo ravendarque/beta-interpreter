@@ -695,6 +695,13 @@
       "match": ["wall run"]
     },
     {
+      "id": "lemay",
+      "name": "Lemay",
+      "facets": ["transition"],
+      "region": "lower",
+      "match": ["lemay"]
+    },
+    {
       "id": "pistol-squat",
       "name": "Pistol squat",
       "facets": ["transition"],
