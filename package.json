@@ -17,6 +17,7 @@
     "LICENSE-SCHEDULE.md"
   ],
   "scripts": {
+    "workbench": "vite",
     "lint": "biome check --error-on-warnings .",
     "format": "biome format --write .",
     "typecheck": "tsc -p .",
@@ -24,7 +25,9 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
+    "@types/node": "22.20.5",
     "typescript": "7.0.2",
+    "vite": "8.3.4",
     "vitest": "5.0.5"
   }
 }

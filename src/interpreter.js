@@ -34,7 +34,7 @@
  *   issues: string[],
  * }} Beat
  * @typedef {{ s: number, e: number, facet: string, term?: Term, ambiguous?: boolean, fuzzy?: boolean }} Span
- * @typedef {{ occ: string, word: string, options: Term[] }} Ambiguity
+ * @typedef {{ occ: string, word: string, options: Term[], s: number }} Ambiguity
  * @typedef {{ raw: string, guess?: string, s: number, e: number }} Unknown
  * @typedef {{ from: string, to: string }} Fuzzy
  * @typedef {{
@@ -45,7 +45,9 @@
  *   amb: Ambiguity[],
  *   unknown: Unknown[],
  *   fuzzy: Fuzzy[],
+ *   trace: Trace[],
  * }} Reading
+ * @typedef {{ s: number, e: number, text: string, kind: string, key?: string, fuzzy?: string[], guess?: string }} Trace
  * @typedef {{ resolutions?: Map<string, number>, ignored?: Set<string> }} ParseOptions
  * @typedef {{ n: number, s: number, e: number }} Extent
  * @typedef {Extent & (
@@ -201,7 +203,8 @@ export function createInterpreter({ terms, words }) {
     }
 
     /** @type {Reading} */
-    const out = { terrain: [], features: [], beats: [], spans: [], amb: [], unknown: [], fuzzy: [] };
+    const out = { terrain: [], features: [], beats: [], spans: [], amb: [], unknown: [], fuzzy: [], trace: [] };
+    for (const tok of toks) if (tok.sep) out.trace.push({ s: tok.s, e: tok.e, text: tok.raw, kind: "split" });
     /** @type {Record<string, number>} */
     const seen = {};
     for (const clause of clauses) {
@@ -242,6 +245,14 @@ export function createInterpreter({ terms, words }) {
                     : { kind: "unknown", raw: tok.raw, guess: tok.guess, ...at };
         }
         items.push(m);
+        out.trace.push({
+          s: m.s,
+          e: m.e,
+          text: text.slice(m.s, m.e),
+          kind: m.kind,
+          ...(m.kind === "term" ? { key: m.key, fuzzy: m.fz } : {}),
+          ...(m.kind === "unknown" && m.guess ? { guess: m.guess } : {}),
+        });
         i += m.n;
       }
 
@@ -306,7 +317,7 @@ export function createInterpreter({ terms, words }) {
         if (chosen !== undefined && m.senses[chosen]) term = m.senses[chosen];
         else if (senses.length > 1) {
           ambiguous = true;
-          out.amb.push({ occ, word: text.slice(m.s, m.e), options: m.senses });
+          out.amb.push({ occ, word: text.slice(m.s, m.e), options: m.senses, s: m.s });
         }
         if (m.fz.length) out.fuzzy.push({ from: m.fz.join(" "), to: term.name });
         const facet = facetOf(term);
@@ -358,6 +369,7 @@ export function createInterpreter({ terms, words }) {
       }
       out.beats.push(beat);
     }
+    out.trace.sort((a, b) => a.s - b.s);
     return out;
   }
 
