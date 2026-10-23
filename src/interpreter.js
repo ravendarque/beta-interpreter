@@ -1,5 +1,15 @@
 /**
- * @typedef {{ id: string, name: string, facets: string[], region?: string, part?: string, parent?: string, match: string[] }} Term
+ * @typedef {{
+ *   id: string,
+ *   name: string,
+ *   facets: string[],
+ *   region?: string,
+ *   part?: string,
+ *   side?: string,
+ *   sameLimb?: boolean,
+ *   parent?: string,
+ *   match: string[],
+ * }} Term
  * @typedef {{ side?: string, part?: string }} Limb
  * @typedef {{
  *   limbs: Record<string, Limb>,
@@ -11,12 +21,14 @@
  * }} Words
  * @typedef {{ terms: Term[], words: Words }} Vocabulary
  * @typedef {{ role: string | null, ori: Term | null, kinds: Term[] }} Hold
+ * @typedef {{ kind: "hold", hold: Hold } | { kind: "position", term: Term, role: string | null } | { kind: "transition", term: Term }} Part
  * @typedef {{
  *   side: string | null,
  *   part: string | null,
  *   moves: Term[],
  *   pos: Term[],
  *   holds: Hold[],
+ *   order: Part[],
  *   crux: boolean,
  *   issues: string[],
  * }} Beat
@@ -233,7 +245,16 @@ export function createInterpreter({ terms, words }) {
       }
 
       /** @type {Beat} */
-      const beat = { side: null, part: null, moves: [], pos: [], holds: [], crux: !!clause.bang, issues: [] };
+      const beat = {
+        side: null,
+        part: null,
+        moves: [],
+        pos: [],
+        holds: [],
+        order: [],
+        crux: !!clause.bang,
+        issues: [],
+      };
       for (const m of items)
         if (m.kind === "limb") {
           beat.side = m.side || beat.side;
@@ -303,6 +324,7 @@ export function createInterpreter({ terms, words }) {
           else {
             last = { role, ori: pendingOri, kinds: [term] };
             beat.holds.push(last);
+            beat.order.push({ kind: "hold", hold: last });
             pendingOri = null;
           }
           rockRun = true;
@@ -312,11 +334,19 @@ export function createInterpreter({ terms, words }) {
         if (beat.pos.includes(term) || beat.moves.includes(term)) continue;
         if (facet === "position") {
           beat.pos.push(term);
+          beat.order.push({ kind: "position", term, role });
           if (!fits(beat.part, term.part))
             beat.issues.push(`${term.name} is a ${term.part} position, but this step names a ${beat.part}.`);
-        } else beat.moves.push(term);
+        } else {
+          beat.moves.push(term);
+          beat.order.push({ kind: "transition", term });
+        }
       }
-      if (pendingOri) beat.holds.push({ role, ori: pendingOri, kinds: [] });
+      if (pendingOri) {
+        const hold = { role, ori: pendingOri, kinds: [] };
+        beat.holds.push(hold);
+        beat.order.push({ kind: "hold", hold });
+      }
       for (const h of beat.holds) h.role ||= beat.moves.length ? "target" : "on";
       if (!beat.part && beat.pos.length) beat.part = beat.pos[0].part ?? null;
       if (!beat.part && beat.moves.some(m => m.region === "upper")) beat.part = "hand";

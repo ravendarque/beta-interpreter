@@ -158,7 +158,7 @@
       "id": "jug",
       "name": "Jug",
       "facets": ["hold"],
-      "match": ["jug", "bucket"]
+      "match": ["jug", "bucket", "hero jug"]
     },
     {
       "id": "sloper",
@@ -309,7 +309,8 @@
       "facets": ["position"],
       "region": "upper",
       "part": "hand",
-      "match": ["compression", "squeeze", "squeezing"]
+      "match": ["compression", "squeeze", "squeezing"],
+      "side": "both"
     },
     {
       "id": "layback",
@@ -556,7 +557,8 @@
       "facets": ["position"],
       "region": "lower",
       "part": "leg",
-      "match": ["compression", "leg compression"]
+      "match": ["compression", "leg compression"],
+      "side": "both"
     },
     {
       "id": "drop-knee",
@@ -651,6 +653,13 @@
       "facets": ["transition"],
       "region": "upper",
       "match": ["dyno", "dynoed"]
+    },
+    {
+      "id": "fire-up",
+      "name": "Fire up",
+      "facets": ["transition"],
+      "region": "upper",
+      "match": ["fire up"]
     },
     {
       "id": "jump",
@@ -756,6 +765,13 @@
       "facets": ["transition"],
       "region": "full",
       "match": ["fridge", "hug"]
+    },
+    {
+      "id": "bump",
+      "name": "Bump",
+      "facets": ["transition"],
+      "sameLimb": true,
+      "match": ["bump"]
     }
   ]
 }

@@ -20,7 +20,9 @@ describe("vocabulary", () => {
     if (t.region) expect(REGIONS).toContain(t.region);
     if (t.part) expect(PARTS).toContain(t.part);
     if (t.facets.includes("position")) expect(t.part).toBeDefined();
-    if (t.facets.includes("position") || t.facets.includes("transition")) expect(t.region).toBeDefined();
+    if (t.facets.includes("position") || (t.facets.includes("transition") && !t.sameLimb))
+      expect(t.region).toBeDefined();
+    if (t.side) expect(t.side).toBe("both");
     for (const m of t.match) expect(norm(m)).not.toBe("");
   });
 
