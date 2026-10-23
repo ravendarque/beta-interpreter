@@ -1,0 +1,120 @@
+{
+  "limbs": {
+    "left": {
+      "side": "left"
+    },
+    "right": {
+      "side": "right"
+    },
+    "l": {
+      "side": "left"
+    },
+    "r": {
+      "side": "right"
+    },
+    "both": {
+      "side": "both"
+    },
+    "lh": {
+      "side": "left",
+      "part": "hand"
+    },
+    "rh": {
+      "side": "right",
+      "part": "hand"
+    },
+    "lf": {
+      "side": "left",
+      "part": "foot"
+    },
+    "rf": {
+      "side": "right",
+      "part": "foot"
+    },
+    "hand": {
+      "part": "hand"
+    },
+    "hands": {
+      "part": "hand"
+    },
+    "foot": {
+      "part": "foot"
+    },
+    "feet": {
+      "part": "foot"
+    },
+    "knee": {
+      "part": "leg"
+    },
+    "knees": {
+      "part": "leg"
+    }
+  },
+  "prepositions": {
+    "from": "start",
+    "off": "start",
+    "to": "target",
+    "into": "target",
+    "onto": "target",
+    "for": "target",
+    "on": "on",
+    "in": "on",
+    "using": "on",
+    "with": "on"
+  },
+  "crux": ["crux", "hard", "hardest"],
+  "stop": [
+    "a",
+    "an",
+    "the",
+    "it",
+    "its",
+    "my",
+    "your",
+    "i",
+    "you",
+    "up",
+    "down",
+    "out",
+    "over",
+    "big",
+    "small",
+    "little",
+    "good",
+    "bad",
+    "tiny",
+    "huge",
+    "quick",
+    "really",
+    "very",
+    "just",
+    "of",
+    "at",
+    "by",
+    "as",
+    "is",
+    "was",
+    "get",
+    "go",
+    "move",
+    "moves",
+    "hold",
+    "holds",
+    "start",
+    "finish",
+    "top",
+    "high",
+    "low",
+    "stand",
+    "sit",
+    "reach",
+    "catch",
+    "grab",
+    "then",
+    "it's",
+    "straight",
+    "easy"
+  ],
+  "splitAlways": ["then"],
+  "splitBeforeMove": ["and"]
+}
