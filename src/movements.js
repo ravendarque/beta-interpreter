@@ -7,7 +7,7 @@ import { facetOf } from "./interpreter.js";
  * @typedef {import("./interpreter.js").Reading} Reading
  * @typedef {"lh" | "rh" | "lf" | "rf"} LimbKey
  * @typedef {"stated" | "implied" | "inferred"} SideSource
- * @typedef {{ side: SideSource | null, hold: Hold | null, techniques: Term[] }} Contact
+ * @typedef {{ side: SideSource | null, hold: Hold | null, holdSource: "stated" | "inferred" | null, techniques: Term[] }} Contact
  * @typedef {Contact & { part: string | null }} Unplaced
  * @typedef {{ limbs: Partial<Record<LimbKey, Contact>>, body: Term[], unplaced: Unplaced[] }} State
  * @typedef {{ terms: Term[], limbs: LimbKey[], side: SideSource | null }} Transition
@@ -63,7 +63,7 @@ function place(state, at, part, { hold, technique }) {
   const contacts = [];
   if (at.keys.length)
     for (const key of at.keys) {
-      const c = state.limbs[key] ?? { side: at.side, hold: null, techniques: [] };
+      const c = state.limbs[key] ?? { side: at.side, hold: null, holdSource: null, techniques: [] };
       state.limbs[key] = c;
       if (at.side && (!c.side || RANK[at.side] > RANK[c.side])) c.side = at.side;
       contacts.push(c);
@@ -71,12 +71,15 @@ function place(state, at, part, { hold, technique }) {
   else {
     const p = limbPart(part);
     const found = state.unplaced.find(x => x.part === p);
-    const u = found ?? { part: p, side: null, hold: null, techniques: [] };
+    const u = found ?? { part: p, side: null, hold: null, holdSource: null, techniques: [] };
     if (!found) state.unplaced.push(u);
     contacts.push(u);
   }
   for (const c of contacts) {
-    if (hold) c.hold = hold;
+    if (hold) {
+      c.hold = hold;
+      c.holdSource = "stated";
+    }
     if (technique && !c.techniques.includes(technique)) c.techniques.push(technique);
   }
 }
@@ -178,7 +181,10 @@ export function toMovements(reading) {
     for (const s of sameHold)
       for (const key of s.keys) {
         const c = s.state.limbs[key];
-        if (c && !c.hold && s.hold) c.hold = s.hold;
+        if (c && !c.hold && s.hold) {
+          c.hold = s.hold;
+          c.holdSource = "inferred";
+        }
       }
 
     if (!moved) return;

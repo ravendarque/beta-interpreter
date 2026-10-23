@@ -7,6 +7,7 @@ import { parse, toMovements } from "../src/index.js";
 const contact = c => ({
   side: c.side,
   hold: c.hold ? [c.hold.ori, ...c.hold.kinds].flatMap(t => (t ? [t.id] : [])) : [],
+  holdSource: c.holdSource,
   techniques: c.techniques.map(t => t.id),
 });
 
@@ -36,9 +37,12 @@ describe("toMovements", () => {
   it("moves the other hand after one hand establishes", () => {
     expect(read("get the left hand securely on the slopey crimp, then fire up for the hero jug")).toEqual([
       {
-        start: { ...empty, limbs: { lh: { side: "stated", hold: ["sloper", "crimp"], techniques: [] } } },
+        start: {
+          ...empty,
+          limbs: { lh: { side: "stated", hold: ["sloper", "crimp"], holdSource: "stated", techniques: [] } },
+        },
         transition: { terms: ["fire-up"], limbs: ["rh"], side: "inferred" },
-        end: { ...empty, limbs: { rh: { side: "inferred", hold: ["jug"], techniques: [] } } },
+        end: { ...empty, limbs: { rh: { side: "inferred", hold: ["jug"], holdSource: "stated", techniques: [] } } },
         crux: false,
       },
     ]);
@@ -47,9 +51,12 @@ describe("toMovements", () => {
   it("bumps with the same limb as the previous move", () => {
     expect(read("get the left hand securely on the slopey crimp, then big bump to the hero jug")).toEqual([
       {
-        start: { ...empty, limbs: { lh: { side: "stated", hold: ["sloper", "crimp"], techniques: [] } } },
+        start: {
+          ...empty,
+          limbs: { lh: { side: "stated", hold: ["sloper", "crimp"], holdSource: "stated", techniques: [] } },
+        },
         transition: { terms: ["bump"], limbs: ["lh"], side: "inferred" },
-        end: { ...empty, limbs: { lh: { side: "inferred", hold: ["jug"], techniques: [] } } },
+        end: { ...empty, limbs: { lh: { side: "inferred", hold: ["jug"], holdSource: "stated", techniques: [] } } },
         crux: false,
       },
     ]);
@@ -65,27 +72,33 @@ describe("toMovements", () => {
         start: {
           ...empty,
           limbs: {
-            lh: { side: "stated", hold: ["jug"], techniques: ["match"] },
-            rh: { side: "stated", hold: ["jug"], techniques: ["match"] },
-            rf: { side: "stated", hold: ["lip"], techniques: ["heel-hook"] },
+            lh: { side: "stated", hold: ["jug"], holdSource: "stated", techniques: ["match"] },
+            rh: { side: "stated", hold: ["jug"], holdSource: "stated", techniques: ["match"] },
+            rf: { side: "stated", hold: ["lip"], holdSource: "stated", techniques: ["heel-hook"] },
           },
         },
         transition: { terms: ["crossover"], limbs: ["lh"], side: "stated" },
-        end: { ...empty, limbs: { lh: { side: "stated", hold: ["sidepull", "crimp"], techniques: [] } } },
+        end: {
+          ...empty,
+          limbs: { lh: { side: "stated", hold: ["sidepull", "crimp"], holdSource: "stated", techniques: [] } },
+        },
         crux: false,
       },
       {
         start: empty,
         transition: { terms: ["deadpoint"], limbs: ["rh"], side: "inferred" },
-        end: { ...empty, limbs: { rh: { side: "inferred", hold: ["sloper", "pinch"], techniques: [] } } },
+        end: {
+          ...empty,
+          limbs: { rh: { side: "inferred", hold: ["sloper", "pinch"], holdSource: "stated", techniques: [] } },
+        },
         crux: true,
       },
       {
         start: {
           ...empty,
           limbs: {
-            lh: { side: "implied", hold: ["sloper", "pinch"], techniques: ["match"] },
-            rh: { side: "implied", hold: ["sloper", "pinch"], techniques: ["match"] },
+            lh: { side: "implied", hold: ["sloper", "pinch"], holdSource: "inferred", techniques: ["match"] },
+            rh: { side: "implied", hold: ["sloper", "pinch"], holdSource: "inferred", techniques: ["match"] },
           },
         },
         transition: { terms: ["rockover"], limbs: [], side: null },
@@ -97,8 +110,8 @@ describe("toMovements", () => {
 
   it("matches feet on the hold the last foot is on", () => {
     expect(read("right foot on the edge then match feet, then dyno to the jug")[0].start.limbs).toEqual({
-      lf: { side: "implied", hold: ["edge"], techniques: ["match"] },
-      rf: { side: "stated", hold: ["edge"], techniques: ["match"] },
+      lf: { side: "implied", hold: ["edge"], holdSource: "inferred", techniques: ["match"] },
+      rf: { side: "stated", hold: ["edge"], holdSource: "stated", techniques: ["match"] },
     });
   });
 
@@ -108,12 +121,15 @@ describe("toMovements", () => {
         start: {
           ...empty,
           limbs: {
-            lf: { side: "stated", hold: [], techniques: ["knee-bar"] },
-            rf: { side: "stated", hold: [], techniques: ["knee-bar"] },
+            lf: { side: "stated", hold: [], holdSource: null, techniques: ["knee-bar"] },
+            rf: { side: "stated", hold: [], holdSource: null, techniques: ["knee-bar"] },
           },
         },
         transition: { terms: ["dyno"], limbs: [], side: null },
-        end: { ...empty, unplaced: [{ part: "hand", side: null, hold: ["jug"], techniques: [] }] },
+        end: {
+          ...empty,
+          unplaced: [{ part: "hand", side: null, hold: ["jug"], holdSource: "stated", techniques: [] }],
+        },
         crux: false,
       },
     ]);
@@ -123,8 +139,8 @@ describe("toMovements", () => {
     expect(read("compression on the arete then paddle up the rail")[0].start).toEqual({
       ...empty,
       limbs: {
-        lh: { side: "implied", hold: ["arete"], techniques: ["compression-hands"] },
-        rh: { side: "implied", hold: ["arete"], techniques: ["compression-hands"] },
+        lh: { side: "implied", hold: ["arete"], holdSource: "stated", techniques: ["compression-hands"] },
+        rh: { side: "implied", hold: ["arete"], holdSource: "stated", techniques: ["compression-hands"] },
       },
     });
   });
@@ -132,9 +148,15 @@ describe("toMovements", () => {
   it("records a movement to a target hold with no named transition", () => {
     expect(read("lock off to the crimp")).toEqual([
       {
-        start: { ...empty, unplaced: [{ part: "hand", side: null, hold: [], techniques: ["lock-off"] }] },
+        start: {
+          ...empty,
+          unplaced: [{ part: "hand", side: null, hold: [], holdSource: null, techniques: ["lock-off"] }],
+        },
         transition: { terms: [], limbs: [], side: null },
-        end: { ...empty, unplaced: [{ part: "hand", side: null, hold: ["crimp"], techniques: [] }] },
+        end: {
+          ...empty,
+          unplaced: [{ part: "hand", side: null, hold: ["crimp"], holdSource: "stated", techniques: [] }],
+        },
         crux: false,
       },
     ]);
