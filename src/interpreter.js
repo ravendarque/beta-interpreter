@@ -7,6 +7,7 @@
  *   part?: string,
  *   side?: string,
  *   sameLimb?: boolean,
+ *   sameHold?: boolean,
  *   parent?: string,
  *   match: string[],
  * }} Term
@@ -79,7 +80,7 @@ function lev(a, b) {
 }
 
 /** @param {string | null} named @param {string | undefined} part */
-const fits = (named, part) => !named || part === named || (named === "foot" && part === "leg");
+const fits = (named, part) => !named || !part || part === named || (named === "foot" && part === "leg");
 
 /** @param {Vocabulary} vocabulary */
 export function createInterpreter({ terms, words }) {

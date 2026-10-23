@@ -364,8 +364,8 @@
       "id": "match",
       "name": "Match",
       "facets": ["position"],
-      "region": "upper",
-      "part": "hand",
+      "side": "both",
+      "sameHold": true,
       "match": ["match", "matched"]
     },
     {

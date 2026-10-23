@@ -81,12 +81,25 @@ describe("toMovements", () => {
         crux: true,
       },
       {
-        start: { ...empty, unplaced: [{ part: "hand", side: null, hold: [], techniques: ["match"] }] },
+        start: {
+          ...empty,
+          limbs: {
+            lh: { side: "implied", hold: ["sloper", "pinch"], techniques: ["match"] },
+            rh: { side: "implied", hold: ["sloper", "pinch"], techniques: ["match"] },
+          },
+        },
         transition: { terms: ["rockover"], limbs: [], side: null },
         end: empty,
         crux: false,
       },
     ]);
+  });
+
+  it("matches feet on the hold the last foot is on", () => {
+    expect(read("right foot on the edge then match feet, then dyno to the jug")[0].start.limbs).toEqual({
+      lf: { side: "implied", hold: ["edge"], techniques: ["match"] },
+      rf: { side: "stated", hold: ["edge"], techniques: ["match"] },
+    });
   });
 
   it("puts a double knee bar on both legs", () => {

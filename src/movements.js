@@ -94,6 +94,8 @@ export function toMovements(reading) {
   const lastByPart = {};
   /** @type {LimbKey | null} */
   let lastKey = null;
+  /** @type {Partial<Record<LimbKey, Hold>>} */
+  const lastHold = {};
   let start = emptyState();
   /** @type {number[]} */
   let steps = [];
@@ -137,6 +139,8 @@ export function toMovements(reading) {
     /** @type {Placement[]} */
     const positionKeys = [];
     let phase = "start";
+    /** @type {{ state: State, keys: LimbKey[], hold: Hold | undefined }[]} */
+    const sameHold = [];
 
     for (const p of beat.order) {
       if (p.kind === "transition") continue;
@@ -146,14 +150,17 @@ export function toMovements(reading) {
       const state = phase === "end" ? end : start;
 
       if (p.kind === "position") {
+        const part = p.term.part ?? limbPart(beat.part) ?? (lastKey ? partOf(lastKey) : null);
         /** @type {Placement} */
         const at = p.term.side
-          ? { keys: keysFor(p.term.side, p.term.part), side: beat.side === "both" ? "stated" : "implied" }
+          ? { keys: keysFor(p.term.side, part), side: beat.side === "both" ? "stated" : "implied" }
           : beat.side
-            ? { keys: keysFor(beat.side, p.term.part), side: "stated" }
+            ? { keys: keysFor(beat.side, part), side: "stated" }
             : { keys: [], side: null };
         if (at.keys.length) positionKeys.push(at);
-        place(state, at, p.term.part ?? null, { technique: p.term });
+        place(state, at, part, { technique: p.term });
+        const prev = part ? lastByPart[part] : undefined;
+        if (p.term.sameHold && at.keys.length) sameHold.push({ state, keys: at.keys, hold: prev && lastHold[prev] });
         if (phase === "start") establish(at);
         continue;
       }
@@ -164,8 +171,15 @@ export function toMovements(reading) {
       if (!at.keys.length && moved) at = moved.at;
       const part = moved?.part ?? limbPart(beat.part);
       place(state, at, part, { hold: p.hold });
+      for (const key of at.keys) lastHold[key] = p.hold;
       if (phase === "start" || !moved) establish(at);
     }
+
+    for (const s of sameHold)
+      for (const key of s.keys) {
+        const c = s.state.limbs[key];
+        if (c && !c.hold && s.hold) c.hold = s.hold;
+      }
 
     if (!moved) return;
     establish(moved.at);
