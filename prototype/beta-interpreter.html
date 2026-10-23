@@ -1,0 +1,349 @@
+<title>Beta Interpreter</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: free text and its read-back on the left, the derived record on the right from 900px; facet colours shared by both */
+:root{
+  --bg:#ECEFEB;--surface:#FAFBF9;--fg:#1B211E;--muted:#59645E;--line:#C9D0CA;
+  --accent:#1D7656;--accent-ink:#FFFFFF;--warn:#A9480F;
+  --f-terrain:#D9E4F5;--f-rock:#F3E1BD;--f-angle:#E6DAF5;--f-body:#D2EADB;--f-move:#F6D6D0;--f-limb:#E1E5E2;
+  --display:'Bricolage Grotesque',ui-sans-serif,system-ui,sans-serif;
+  --body:'Atkinson Hyperlegible',ui-sans-serif,system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121614;--surface:#1A201D;--fg:#E4EAE6;--muted:#9AA69F;--line:#2D3631;
+  --accent:#4FC596;--accent-ink:#0D1511;--warn:#F08A4B;
+  --f-terrain:#20304A;--f-rock:#43341A;--f-angle:#352851;--f-body:#1D3D2E;--f-move:#4D2621;--f-limb:#2B322E;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121614;--surface:#1A201D;--fg:#E4EAE6;--muted:#9AA69F;--line:#2D3631;
+  --accent:#4FC596;--accent-ink:#0D1511;--warn:#F08A4B;
+  --f-terrain:#20304A;--f-rock:#43341A;--f-angle:#352851;--f-body:#1D3D2E;--f-move:#4D2621;--f-limb:#2B322E;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.wrap{max-width:1080px;margin:0 auto;display:grid;gap:20px}
+h1{font:800 clamp(1.7rem,5vw,2.5rem)/1.05 var(--display);margin:0;text-wrap:balance}
+h2{font:600 1.05rem/1.2 var(--display);margin:0}
+.lede{margin:0;color:var(--muted);max-width:64ch}
+.label{font:600 .72rem var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.split{display:grid;gap:20px}
+@media (min-width:900px){.split{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);align-items:start}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:14px;min-width:0}
+textarea{width:100%;min-height:8.5em;resize:vertical;font:1.05rem/1.55 var(--body);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:.3rem .75rem;min-height:32px;font-size:.92rem}
+.chip.f{border-color:transparent}
+.samples .chip{font-size:.85rem}
+.readback{font-size:1.02rem;line-height:2;margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+mark{color:inherit;border-radius:4px;padding:.08em .2em}
+.f-terrain{background:var(--f-terrain)}.f-feature,.f-hold{background:var(--f-rock)}.f-angle{background:var(--f-angle)}
+.f-position{background:var(--f-body)}.f-move{background:var(--f-move)}.f-limb{background:var(--f-limb)}
+mark.amb{text-decoration:underline wavy var(--warn);text-underline-offset:4px}
+mark.fz{text-decoration:underline dotted var(--muted);text-underline-offset:4px}
+.unk{text-decoration:underline dashed var(--warn);text-underline-offset:4px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 10px;font-size:.8rem;color:var(--muted)}
+.legend mark{font-size:.8rem}
+.qs{display:grid;gap:10px}
+.q{display:grid;gap:6px;border-left:3px solid var(--warn);padding-left:10px}
+.q p{margin:0;font-size:.92rem}
+.q.info{border-left-color:var(--line)}
+.btnrow{display:flex;flex-wrap:wrap;gap:6px}
+.mini{border:1px solid var(--fg);background:transparent;border-radius:6px;padding:.2rem .6rem;font-size:.85rem;font-weight:700}
+.mini.ghost{border-color:var(--line);font-weight:400}
+.beats{list-style:none;margin:0;padding:0;display:grid;gap:10px;counter-reset:beat}
+.beat{border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:8px;counter-increment:beat}
+.beat.crux{border-color:var(--warn);border-width:2px}
+.beat-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.beat-head::before{content:counter(beat);font:800 1.1rem var(--display);color:var(--muted);font-variant-numeric:tabular-nums}
+.tag{font:600 .7rem var(--mono);text-transform:uppercase;letter-spacing:.06em;padding:.1rem .4rem;border-radius:4px;border:1px solid var(--warn);color:var(--warn)}
+.say{margin:0;font-size:.95rem}
+dl{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 12px}
+dt{font:600 .7rem/1.9 var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+dd{margin:0;display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.term{font:400 .8rem var(--mono);border-radius:4px;padding:.12rem .45rem}
+.term sup{font-size:.65rem;color:var(--warn);margin-left:2px}
+.issue{margin:0;font-size:.85rem;color:var(--warn)}
+.none{color:var(--muted);font-size:.85rem;margin:0}
+.foot{font-size:.82rem;color:var(--muted);margin:0}
+</style>
+
+<div class="wrap">
+  <header style="display:grid;gap:10px">
+    <p class="label">Climbing taxonomy · free-text mockup</p>
+    <h1>Tell it the beta. It works out the rest.</h1>
+    <p class="lede">Write the climb the way you'd describe it to a mate. The interpreter reads it against the taxonomy, asks only about what it can't settle, and builds the structured record. The text stays the source of truth: fixes edit the text, and the record is always rebuilt from it.</p>
+  </header>
+
+  <div class="split">
+    <section class="panel" aria-label="Beta">
+      <div style="display:grid;gap:8px">
+        <p class="label">Try an example</p>
+        <div class="chips samples" id="samples"></div>
+      </div>
+      <label for="beta" class="label">Your beta</label>
+      <textarea id="beta" spellcheck="false" autocomplete="off"></textarea>
+      <div class="chips" id="complete" aria-label="Completions"></div>
+      <div style="display:grid;gap:8px">
+        <p class="label">How it was read</p>
+        <p class="readback" id="readback"></p>
+        <div class="legend"><mark class="f-terrain">terrain</mark><mark class="f-hold">hold / feature</mark><mark class="f-angle">angle</mark><mark class="f-position">position</mark><mark class="f-move">move</mark><mark class="f-limb">limb</mark><span class="unk">not recognised</span></div>
+      </div>
+      <div class="qs" id="questions"></div>
+    </section>
+
+    <aside class="panel" aria-label="Structured record">
+      <h2>Structured record</h2>
+      <dl id="climb"></dl>
+      <ol class="beats" id="beats"></ol>
+      <p class="foot"><sup style="color:var(--warn)">new</sup> marks terms that aren't in the mind map yet but turned up as gaps: deadpoint, lock-off, match, drop knee.</p>
+    </aside>
+  </div>
+</div>
+
+<script>
+const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9']+/g, ' ').trim();
+const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const LEX = new Map(), TERMS = [];
+function t(facet, part, name, syn = '', proposed = false) {
+  const term = { name, facet, part, proposed };
+  TERMS.push(term);
+  for (const p of [name, ...syn.split(',').filter(Boolean)]) {
+    const k = norm(p);
+    if (!LEX.has(k)) LEX.set(k, []);
+    if (!LEX.get(k).includes(term)) LEX.get(k).push(term);
+  }
+  return term;
+}
+const many = (facet, part, rows) => rows.forEach(([n, s, p]) => t(facet, part, n, s, p));
+many('terrain', null, [['Vert', 'vertical,face'], ['Slab', 'slabby'], ['Overhang', 'overhanging,overhung,steep,cave'], ['Roof', 'ceiling'], ['Chimney/Dihedral', 'chimney,dihedral,corner,groove']]);
+many('feature', null, [['Edge'], ['Rail'], ['Ledge'], ['Lip'], ['Arête', 'arete'], ['Flake'], ['Tufa'], ['Crack'], ['Offwidth', 'ow,off width'], ['Squeeze chimney'], ['Full chimney', 'chimney'], ['Slot'], ['Dish'], ['Crease'], ['Seam'], ['Texture'], ['Horn'], ['Pebble'], ['Crescent']]);
+many('hold', null, [['Jug', 'bucket'], ['Sloper', 'slopey,slopy'], ['Crimp', 'crimpy,crimper'], ['Flatty', 'flattie'], ['Pinch', 'pinchy'], ['Pocket'], ['Mono'], ['Two finger pocket', 'two finger,2 finger'], ['Three finger pocket', 'three finger,3 finger'], ['Jib', 'chip,jib/chip/pebble']]);
+many('angle', null, [['Sidepull', 'side pull'], ['Undercling', 'undercut'], ['Gaston'], ['Upright']]);
+many('position', 'hand', [['Half crimp'], ['Full crimp', 'closed crimp'], ['Chisel'], ['Stacked', 'stacked crimp'], ['Palm down', 'palm,palming'], ['Thumb press', 'thumb'], ['Layback', 'lieback,layaway,laybacking'], ['Jam (hand)', 'jam,hand jam,finger jam,fist jam,finger lock'], ['Drag'], ['Guppy', 'guppie'], ['Compression (hands)', 'compression,squeeze,squeezing'], ['Arm bar', 'armbar'], ['Chicken wing']]);
+many('position', 'foot', [['Heel hook', 'heel,heelhook'], ['Toe hook', 'toe,toehook'], ['Bicycle', 'bike'], ['Smear', 'smearing'], ['Point'], ['Inside edge'], ['Outside edge'], ['Flag', 'flagging'], ['Inside flag'], ['Back flag'], ['Toe sit'], ['Heel sit'], ['Cam', 'heel toe,heel toe cam,toe cam'], ['Jam/Wedge', 'jam,foot jam,wedge,toe jam'], ['Bridge', 'bridging'], ['Bat hang'], ['Frog']]);
+many('position', 'leg', [['Knee bar', 'kneebar'], ['Knee scum', 'scum'], ['Compression (legs)', 'compression,leg compression'], ['Drop knee', 'dropknee,egyptian', true]]);
+many('position', 'body', [['Body jam'], ['Overhead press']]);
+many('move', 'upper', [['Crossover', 'cross,cross over,crossed'], ['Paddle'], ['Double catch'], ['Ghost match', 'houdini,houdini match'], ['Rollover', 'roll over'], ['Rose move', 'rose,cross through'], ['Campus'], ['Muscle up'], ['Deadpoint', 'dead point', true], ['Lock-off', 'lock off,lockoff,lock,locked off', true], ['Match', 'matched', true]]);
+many('move', 'lower', [['Jump', 'dyno,dynoed'], ['Hop'], ['Step through'], ['Step behind'], ['Pogo'], ['Wall run']]);
+many('move', 'full', [['Rockover', 'rock over,rocked over,rock up'], ['Mantle', 'mantel'], ['Lache'], ['Stem', 'stemming'], ['Back-and-foot chimney', 'back and foot'], ['Fridge', 'hug']]);
+
+const WORDS = [...new Set([...LEX.keys()].flatMap(k => k.split(' ')))];
+const LIMB = { left: { side: 'left' }, right: { side: 'right' }, l: { side: 'left' }, r: { side: 'right' }, both: { side: 'both' },
+  lh: { side: 'left', part: 'hand' }, rh: { side: 'right', part: 'hand' }, lf: { side: 'left', part: 'foot' }, rf: { side: 'right', part: 'foot' },
+  hand: { part: 'hand' }, hands: { part: 'hand' }, foot: { part: 'foot' }, feet: { part: 'foot' }, knee: { part: 'leg' }, knees: { part: 'leg' } };
+const PREP = { from: 'start', off: 'start', to: 'target', into: 'target', onto: 'target', for: 'target', on: 'on', in: 'on', using: 'on', with: 'on' };
+const CRUX = new Set(['crux', 'hard', 'hardest']);
+const STOP = new Set('a an the it its my your i you up down out over big small little good bad tiny huge quick really very just of at by as is was get go move moves hold holds start finish top high low stand sit reach catch grab then it\'s straight easy'.split(' '));
+const BREAK = new Set(['and']);
+const facetClass = f => 'f-' + f;
+const display = term => term.name;
+
+function lev(a, b) {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++)
+    d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  return d[a.length][b.length];
+}
+function nearest(w) {
+  let best = null;
+  for (const c of WORDS) {
+    if (Math.abs(c.length - w.length) > 2) continue;
+    const d = lev(w, c);
+    const better = !best || d < best.d || (d === best.d && (c[0] === w[0]) > (best.w[0] === w[0])) || (d === best.d && c.length > best.w.length && c[0] === w[0]);
+    if (better) best = { w: c, d };
+  }
+  return best && best.d <= 2 ? best : null;
+}
+function lookup(key) {
+  for (const k of [key, key.replace(/es$/, ''), key.replace(/s$/, ''), key.replace(/ed$/, ''), key.replace(/ed$/, 'e'), key.replace(/ing$/, ''), key.replace(/ing$/, 'e')])
+    if (LEX.has(k)) return { key: k, senses: LEX.get(k) };
+  return null;
+}
+const known = w => LIMB[w] || PREP[w] || STOP.has(w) || CRUX.has(w) || BREAK.has(w) || WORDS.includes(w) || lookup(w);
+
+let RES = new Map(), IGNORED = new Set();
+
+function parse(text) {
+  const toks = [];
+  for (const m of text.matchAll(/[\p{L}\p{N}']+|[.;!,:\n—–]|->|→/gu)) {
+    const raw = m[0], n = norm(raw);
+    const tok = { raw, n, s: m.index, e: m.index + raw.length, sep: !n || n === 'then', bang: raw === '!' };
+    if (!tok.sep && !known(n) && !IGNORED.has(n)) {
+      const near = n.length >= 3 ? nearest(n) : null;
+      if (near && ((n.length >= 5 && near.d === 1) || (n.length >= 8 && near.d === 2))) { tok.fz = raw; tok.n = near.w; }
+      else tok.guess = near?.w;
+    }
+    toks.push(tok);
+  }
+  const isMove = k => k && lookup(k)?.senses.some(s => s.facet === 'move');
+  toks.forEach((tok, i) => { if (tok.n === 'and' && (isMove(toks[i + 1]?.n) || isMove(`${toks[i + 1]?.n} ${toks[i + 2]?.n}`))) tok.sep = true; });
+  const clauses = [[]];
+  for (const tok of toks) {
+    if (tok.sep) { if (tok.bang) clauses.at(-1).bang = true; clauses.push([]); }
+    else clauses.at(-1).push(tok);
+  }
+  const out = { terrain: [], features: [], beats: [], spans: [], amb: [], unknown: [], fuzzy: [] };
+  const seen = {};
+  for (const clause of clauses) {
+    const items = [];
+    for (let i = 0; i < clause.length;) {
+      let m = null;
+      for (let n = Math.min(4, clause.length - i); n >= 1 && !m; n--) {
+        const run = clause.slice(i, i + n), hit = lookup(run.map(x => x.n).join(' '));
+        if (hit) m = { kind: 'term', ...hit, n, s: run[0].s, e: run.at(-1).e, fz: run.filter(x => x.fz).map(x => x.fz) };
+      }
+      if (!m) {
+        const tok = clause[i], w = tok.n;
+        m = LIMB[w] ? { kind: 'limb', ...LIMB[w] } : PREP[w] ? { kind: 'prep', role: PREP[w] } : CRUX.has(w) ? { kind: 'crux' }
+          : BREAK.has(w) ? { kind: 'break' } : STOP.has(w) || IGNORED.has(w) ? { kind: 'stop' } : { kind: 'unknown', raw: tok.raw, guess: tok.guess };
+        Object.assign(m, { n: 1, s: tok.s, e: tok.e });
+      }
+      items.push(m); i += m.n;
+    }
+    const beat = { side: null, part: null, moves: [], pos: [], holds: [], crux: !!clause.bang, issues: [] };
+    for (const m of items) if (m.kind === 'limb') { beat.side = m.side || beat.side; beat.part = m.part || beat.part; }
+    let role = null, pendingOri = null, last = null, rockRun = false;
+    for (const m of items) {
+      if (m.kind === 'limb') { out.spans.push({ s: m.s, e: m.e, cls: 'f-limb', title: 'limb' }); continue; }
+      if (m.kind === 'prep') { role = m.role; rockRun = false; continue; }
+      if (m.kind === 'crux') { beat.crux = true; continue; }
+      if (m.kind === 'break') { rockRun = false; continue; }
+      if (m.kind === 'unknown') { out.unknown.push(m); out.spans.push({ s: m.s, e: m.e, cls: 'unk', title: 'not recognised' }); continue; }
+      if (m.kind !== 'term') continue;
+      const occ = m.key + '#' + (seen[m.key] = (seen[m.key] ?? -1) + 1);
+      let senses = m.senses;
+      if (senses.length > 1 && beat.part) { const fit = senses.filter(s => s.facet !== 'position' || s.part === beat.part); if (fit.length) senses = fit; }
+      let term = senses[0], amb = false;
+      if (RES.has(occ)) term = m.senses[RES.get(occ)];
+      else if (senses.length > 1) { amb = true; out.amb.push({ occ, word: text.slice(m.s, m.e), options: m.senses }); }
+      if (m.fz.length) out.fuzzy.push({ from: m.fz.join(' '), to: term.name });
+      out.spans.push({ s: m.s, e: m.e, cls: facetClass(term.facet) + (amb ? ' amb' : '') + (m.fz.length ? ' fz' : ''), title: `${term.facet}: ${term.name}${amb ? ' (ambiguous)' : ''}${m.fz.length ? ` (read “${m.fz.join(' ')}”)` : ''}` });
+      if (term.facet === 'terrain') { if (!out.terrain.includes(term)) out.terrain.push(term); continue; }
+      if (term.facet === 'angle') {
+        if (rockRun && last && !last.ori) last.ori = term; else pendingOri = term;
+        continue;
+      }
+      if (term.facet === 'hold' || term.facet === 'feature') {
+        if (rockRun && last) last.kinds.push(term);
+        else { last = { role, ori: pendingOri, kinds: [term] }; beat.holds.push(last); pendingOri = null; }
+        rockRun = true; continue;
+      }
+      rockRun = false;
+      if (beat.pos.includes(term) || beat.moves.includes(term)) continue;
+      if (term.facet === 'position') {
+        beat.pos.push(term);
+        if (beat.part && term.part !== beat.part && !(beat.part === 'foot' && term.part === 'leg'))
+          beat.issues.push(`${term.name} is a ${term.part} position, but this step names a ${beat.part}.`);
+      } else beat.moves.push(term);
+    }
+    if (pendingOri) beat.holds.push({ role, ori: pendingOri, kinds: [] });
+    for (const h of beat.holds) h.role ||= beat.moves.length ? 'target' : 'on';
+    if (!beat.part && beat.pos.length) beat.part = beat.pos[0].part;
+    if (!beat.part && beat.moves.some(m => m.part === 'upper')) beat.part = 'hand';
+    const content = beat.moves.length || beat.pos.length || beat.side;
+    if (!content) {
+      for (const h of beat.holds) for (const k of h.kinds) if (!out.features.includes(k)) out.features.push(k);
+      if (beat.crux && out.beats.length) out.beats.at(-1).crux = true;
+      continue;
+    }
+    out.beats.push(beat);
+  }
+  return out;
+}
+
+const art = w => /^[aeiou]/i.test(w) ? 'an' : 'a';
+const ROLE = { start: 'from', target: 'to', on: 'on' };
+const who = b => {
+  const part = { hand: 'hand', foot: 'foot', leg: 'leg', body: 'body' }[b.part];
+  if (b.side === 'both') return part ? `Both ${part}s` : 'Both';
+  if (b.side && part) return `${b.side[0].toUpperCase() + b.side.slice(1)} ${part}`;
+  if (b.side) return b.side[0].toUpperCase() + b.side.slice(1);
+  return '';
+};
+function say(b) {
+  const holdPhrase = h => { const words = [h.ori, ...h.kinds].filter(Boolean).map(x => x.name.toLowerCase()); return words.length ? `${ROLE[h.role]} ${art(words[0])} ${words.join(' ')}` : ''; };
+  const actions = [...b.moves, ...b.pos].map(x => x.name.toLowerCase()).join(', ');
+  const body = [actions, ...b.holds.map(holdPhrase)].filter(Boolean).join(' ');
+  const w = who(b);
+  return w ? `${w}: ${body}.` : body[0].toUpperCase() + body.slice(1) + '.';
+}
+const pill = x => `<span class="term ${facetClass(x.facet)}">${esc(x.name)}${x.proposed ? '<sup>new</sup>' : ''}</span>`;
+const pills = xs => xs.length ? xs.map(pill).join('') : '<span class="none">—</span>';
+
+const ta = document.getElementById('beta');
+function render() {
+  const text = ta.value, r = parse(text);
+  let html = '', at = 0;
+  for (const sp of r.spans.sort((a, b) => a.s - b.s)) {
+    if (sp.s < at) continue;
+    html += esc(text.slice(at, sp.s));
+    html += sp.cls === 'unk' ? `<span class="unk" title="${sp.title}">${esc(text.slice(sp.s, sp.e))}</span>` : `<mark class="${sp.cls}" title="${esc(sp.title)}">${esc(text.slice(sp.s, sp.e))}</mark>`;
+    at = sp.e;
+  }
+  document.getElementById('readback').innerHTML = html + esc(text.slice(at)) || '<span class="none">Nothing yet.</span>';
+  const qs = [];
+  for (const a of r.amb) qs.push(`<div class="q"><p>Which <b>${esc(a.word)}</b> did you mean?</p><div class="btnrow">${a.options.map((o, i) => `<button class="mini" data-res="${esc(a.occ)}" data-i="${i}">${esc(o.name)} <span style="font-weight:400;opacity:.7">· ${o.facet}</span></button>`).join('')}</div></div>`);
+  for (const u of r.unknown) qs.push(`<div class="q"><p><b>${esc(u.raw)}</b> isn't in the vocabulary.${u.guess ? ` Did you mean <b>${esc(u.guess)}</b>?` : ''}</p><div class="btnrow">${u.guess ? `<button class="mini" data-fix="${u.s}" data-end="${u.e}" data-to="${esc(u.guess)}">Use ${esc(u.guess)}</button>` : ''}<button class="mini ghost" data-ignore="${esc(norm(u.raw))}">Ignore</button></div></div>`);
+  for (const f of r.fuzzy) qs.push(`<div class="q info"><p>Read <b>${esc(f.from)}</b> as <b>${esc(f.to)}</b>.</p></div>`);
+  document.getElementById('questions').innerHTML = qs.length ? `<p class="label">To check · ${r.amb.length + r.unknown.length}</p>` + qs.join('') : '';
+  document.getElementById('climb').innerHTML = `<dt>Terrain</dt><dd>${pills(r.terrain)}</dd><dt>Features</dt><dd>${pills(r.features)}</dd>
+    <dt>Crux</dt><dd>${r.beats.some(b => b.crux) ? r.beats.map((b, i) => b.crux ? `<span class="term f-limb">step ${i + 1}</span>` : '').join('') : '<span class="none">—</span>'}</dd>`;
+  document.getElementById('beats').innerHTML = r.beats.map(b => `<li class="beat${b.crux ? ' crux' : ''}">
+    <div class="beat-head"><p class="say">${esc(say(b))}</p>${b.crux ? '<span class="tag">crux</span>' : ''}</div>
+    <dl>${who(b) ? `<dt>Limb</dt><dd><span class="term f-limb">${esc(who(b))}</span></dd>` : ''}
+    ${b.moves.length ? `<dt>Move</dt><dd>${pills(b.moves)}</dd>` : ''}${b.pos.length ? `<dt>Position</dt><dd>${pills(b.pos)}</dd>` : ''}
+    ${b.holds.map(h => `<dt>${h.role}</dt><dd>${pills([h.ori, ...h.kinds].filter(Boolean))}</dd>`).join('')}</dl>
+    ${b.issues.map(i => `<p class="issue">${esc(i)}</p>`).join('')}</li>`).join('') || '<li class="none">Steps appear here as you write.</li>';
+  complete();
+}
+
+function complete() {
+  const before = ta.value.slice(0, ta.selectionStart), frag = (before.match(/[\p{L}']+$/u) || [''])[0].toLowerCase();
+  const box = document.getElementById('complete');
+  if (frag.length < 2) { box.innerHTML = ''; return; }
+  const seenTerm = new Set(), opts = [];
+  for (const [k, senses] of LEX) {
+    if (!k.startsWith(norm(frag)) || k === norm(frag)) continue;
+    const term = senses[0];
+    if (seenTerm.has(k) || opts.length >= 6) continue;
+    seenTerm.add(k); opts.push({ k, term });
+  }
+  box.innerHTML = opts.map(o => `<button class="chip f ${facetClass(o.term.facet)}" data-complete="${esc(o.k)}" data-len="${frag.length}">${esc(o.k)}</button>`).join('');
+}
+
+function replaceRange(s, e, str) {
+  ta.value = ta.value.slice(0, s) + str + ta.value.slice(e);
+  ta.focus(); ta.setSelectionRange(s + str.length, s + str.length);
+  render();
+}
+
+const SAMPLES = {
+  'Steep boulder': 'Steep cave. Start matched on the jug, right heel hook on the lip, cross left hand to a sidepull crimp, then deadpoint to the slopey pinch, crux! Match and rock over to finish.',
+  'Slab': 'Slab. Smear the left foot, palm down on the dish, rockover onto the right foot inside edge and lock off to the crimp.',
+  'Crack': 'Offwidth corner: arm bar and heel-toe cam, chicken wing up to the hand jam in the crack.',
+  'Typed in a rush': 'rh slopper undercut, lf toe hok, campus to the jugg, bump to the horn',
+  'Ambiguous': 'Overhanging arête. Squeeze it with compression, jam in the crack, flag and paddle up the rail.',
+  'Contradiction': 'Left hand heel hook on the ledge, then mantle.'
+};
+document.getElementById('samples').innerHTML = Object.keys(SAMPLES).map(k => `<button class="chip" data-sample="${esc(k)}">${esc(k)}</button>`).join('');
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const d = b.dataset;
+  if (d.sample) { RES = new Map(); IGNORED = new Set(); ta.value = SAMPLES[d.sample]; render(); }
+  else if (d.res) { RES.set(d.res, +d.i); render(); }
+  else if (d.fix) replaceRange(+d.fix, +d.end, d.to);
+  else if (d.ignore) { IGNORED.add(d.ignore); render(); }
+  else if (d.complete) { const s = ta.selectionStart - +d.len; replaceRange(s, ta.selectionStart, d.complete + ' '); }
+});
+ta.addEventListener('input', render);
+ta.addEventListener('click', complete);
+ta.addEventListener('keyup', e => { if (e.key.startsWith('Arrow')) complete(); });
+ta.value = SAMPLES['Steep boulder'];
+render();
+</script>
