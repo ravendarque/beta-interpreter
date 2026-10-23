@@ -48,6 +48,9 @@
     },
     "knees": {
       "part": "leg"
+    },
+    "double": {
+      "side": "both"
     }
   },
   "prepositions": {
