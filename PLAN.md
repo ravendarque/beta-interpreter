@@ -68,7 +68,8 @@ State    { limbs: { lh|rh|lf|rf: { hold?, orientation?, technique? } }, body?: [
 - States will always be partial, because real beta names one or two limbs. Trend analysis has to work on whatever facets are present.
 - The parser's start/target roles map to the start and end states.
 - Carrying the limbs not mentioned over from the previous movement belongs to the sequence step, which comes later.
-- **Open (decision 28):** Raven to list 3–5 trend questions for CL. They decide which facets must be captured reliably.
+- Until CL integration, the record captures every facet the text states, and accuracy is scored per facet.
+- **Deferred to step 7 (decision 28):** Raven to list 3–5 trend questions for CL. They decide which facets must be captured reliably.
 
 ## Real beta for tuning: nothing is kept
 
@@ -109,12 +110,12 @@ Draw the start and end states on the body map figure from the earlier mockup, an
 4. Regression suite and side-by-side comparison.
 5. Reddit API fetching, scoreboard, coverage map and fuzzing.
 6. Visualiser.
-7. CL integration as a package. This needs a CL issue first and follows CL's normal workflow.
+7. CL integration as a package. This needs a CL issue and answers to decision 28 first, and follows CL's normal workflow.
 
 ## Open questions for Raven
 
 - 22: should the taxonomy become a faceted dataset first? (Raised in CL; the answer is probably yes, as part of build step 1.)
 - 24: should CL's "hardest move" field become "what defined it"?
 - 26: the repo name, whether it's private, and the licence.
-- 28: CL's trend questions.
+- 28: CL's trend questions. Deferred to step 7.
 - 29 and 32: the community request and the email to UKC.
