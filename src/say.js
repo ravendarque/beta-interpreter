@@ -18,10 +18,22 @@ export function who(b) {
   return "";
 }
 
+/** @param {string} w */
+const pluralWord = w => (/(s|sh|ch|x|z)$/.test(w) ? `${w}es` : /[^aeiou]y$/.test(w) ? `${w.slice(0, -1)}ies` : `${w}s`);
+/** @param {string} name */
+const pluralName = name => name.replace(/\S+$/, pluralWord);
+
+/** @param {Hold} h */
+export function holdName(h) {
+  const kinds = h.kinds.map(k => (h.plural.includes(k.id) ? pluralName(k.name.toLowerCase()) : k.name.toLowerCase()));
+  return [...h.qualifiers, ...(h.ori ? [h.ori.name.toLowerCase()] : []), ...kinds].join(" ");
+}
+
 /** @param {Hold} h */
 function holdPhrase(h) {
-  const words = [...h.qualifiers, ...[h.ori, ...h.kinds].filter(x => x !== null).map(x => x.name.toLowerCase())];
-  return words.length && h.role ? `${ROLE[h.role]} ${art(words[0])} ${words.join(" ")}` : "";
+  const name = holdName(h);
+  if (!name || !h.role) return "";
+  return h.plural.length ? `${ROLE[h.role]} ${name}` : `${ROLE[h.role]} ${art(name)} ${name}`;
 }
 
 /** @param {Beat} b */

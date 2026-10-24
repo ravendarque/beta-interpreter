@@ -96,11 +96,34 @@ describe("parse", () => {
   it("attaches qualifiers to the hold that follows them", () => {
     const r = parse("feet on the small dishes, then reach the sharp shallow crimp");
     expect(r.beats.map(b => b.holds.map(h => h.qualifiers))).toEqual([[["small"]], [["sharp", "shallow"]]]);
-    expect(r.beats.map(say)).toEqual(["Both feet: on a small dish.", "Hand move to a sharp shallow crimp."]);
+    expect(r.beats.map(say)).toEqual(["Both feet: on small dishes.", "Hand move to a sharp shallow crimp."]);
   });
 
   it("keeps a qualifier with no hold after it on the step", () => {
     expect(parse("massive dyno").beats[0].qualifiers).toEqual(["massive"]);
+  });
+
+  it("keeps plural holds plural", () => {
+    const r = parse(
+      "feet on the small dishes, hands on the crimps, left hand on the jug, then reach the two finger pockets",
+    );
+    expect(r.beats.map(b => b.holds.map(h => h.plural))).toEqual([
+      [["dish"]],
+      [["crimp"]],
+      [[]],
+      [["two-finger-pocket"]],
+    ]);
+    expect(r.beats.map(say)).toEqual([
+      "Both feet: on small dishes.",
+      "Both hands: on crimps.",
+      "Left hand: on a jug.",
+      "Hand move to two finger pockets.",
+    ]);
+  });
+
+  it("keeps a plural hold plural when it merges with a singular one", () => {
+    const [b] = parse("hands on the crimps at the back of the slopey rail").beats;
+    expect([b.holds[0].plural, say(b)]).toEqual([["crimp"], "Both hands: on crimps sloper rail."]);
   });
 
   it("returns nothing for empty text", () => {

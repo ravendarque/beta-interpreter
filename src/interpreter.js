@@ -23,7 +23,7 @@
  *   splitBeforeMove: string[],
  * }} Words
  * @typedef {{ terms: Term[], words: Words }} Vocabulary
- * @typedef {{ role: string | null, ori: Term | null, kinds: Term[], qualifiers: string[] }} Hold
+ * @typedef {{ role: string | null, ori: Term | null, kinds: Term[], qualifiers: string[], plural: string[] }} Hold
  * @typedef {{ kind: "hold", hold: Hold } | { kind: "position", term: Term, role: string | null } | { kind: "transition", term: Term }} Part
  * @typedef {{
  *   side: string | null,
@@ -57,7 +57,7 @@
  * @typedef {{ resolutions?: Map<string, number>, ignored?: Set<string> }} ParseOptions
  * @typedef {{ n: number, s: number, e: number }} Extent
  * @typedef {Extent & (
- *   | { kind: "term", key: string, senses: Term[], fz: string[] }
+ *   | { kind: "term", key: string, senses: Term[], plural: boolean, fz: string[] }
  *   | { kind: "limb", side?: string, part?: string }
  *   | { kind: "prep", role: string }
  *   | { kind: "crux" | "break" | "filler" | "handmove" }
@@ -132,7 +132,7 @@ export function createInterpreter({ terms, words }) {
 
   /** @param {string} key */
   function lookup(key) {
-    for (const k of [
+    const variants = [
       key,
       key.replace(/es$/, ""),
       key.replace(/s$/, ""),
@@ -140,9 +140,10 @@ export function createInterpreter({ terms, words }) {
       key.replace(/ed$/, "e"),
       key.replace(/ing$/, ""),
       key.replace(/ing$/, "e"),
-    ]) {
+    ];
+    for (const [i, k] of variants.entries()) {
       const senses = lexicon.get(k);
-      if (senses) return { key: k, senses };
+      if (senses) return { key: k, senses, plural: (i === 1 || i === 2) && k !== key };
     }
     return null;
   }
@@ -367,8 +368,9 @@ export function createInterpreter({ terms, words }) {
           if (rockRun && last) {
             last.kinds.push(term);
             last.qualifiers.push(...pendingQ);
+            if (m.plural) last.plural.push(term.id);
           } else {
-            last = { role, ori: pendingOri, kinds: [term], qualifiers: pendingQ };
+            last = { role, ori: pendingOri, kinds: [term], qualifiers: pendingQ, plural: m.plural ? [term.id] : [] };
             beat.holds.push(last);
             beat.order.push({ kind: "hold", hold: last });
             pendingOri = null;
@@ -392,7 +394,7 @@ export function createInterpreter({ terms, words }) {
         }
       }
       if (pendingOri) {
-        const hold = { role, ori: pendingOri, kinds: [], qualifiers: pendingQ };
+        const hold = { role, ori: pendingOri, kinds: [], qualifiers: pendingQ, plural: [] };
         pendingQ = [];
         beat.holds.push(hold);
         beat.order.push({ kind: "hold", hold });

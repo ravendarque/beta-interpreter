@@ -1,6 +1,6 @@
 import { createInterpreter, facetOf, norm } from "../src/interpreter.js";
 import { toMovements } from "../src/movements.js";
-import { say, who } from "../src/say.js";
+import { holdName, say, who } from "../src/say.js";
 import { $, h } from "./dom.js";
 import { groupQuestions } from "./questions.js";
 import { METRICS, TAGS } from "./ratings.js";
@@ -144,10 +144,7 @@ function facetOfTrace(t) {
   return t.kind;
 }
 /** @param {import("../src/interpreter.js").Hold | null} hold */
-const holdText = hold =>
-  hold
-    ? [...hold.qualifiers, ...[hold.ori, ...hold.kinds].flatMap(t => (t ? [t.name.toLowerCase()] : []))].join(" ")
-    : "";
+const holdText = hold => (hold ? holdName(hold) : "");
 
 function metrics() {
   const r = state.reading;
