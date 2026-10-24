@@ -72,7 +72,8 @@
   "moves": {
     "reach": "upper",
     "catch": "upper",
-    "grab": "upper"
+    "grab": "upper",
+    "stomp": "lower"
   },
   "qualifiers": [
     "high",
@@ -88,7 +89,9 @@
     "shallow",
     "deep",
     "sharp",
-    "blunt"
+    "blunt",
+    "hard",
+    "back"
   ],
   "filler": [
     "a",

@@ -52,7 +52,7 @@ describe("parse", () => {
   });
 
   it("keeps a word with a curly apostrophe together", () => {
-    expect(parse("I don’t think it’s hard").unknown.map(u => u.raw)).toEqual(["don’t", "think", "hard"]);
+    expect(parse("I don’t think it’s hard").unknown.map(u => u.raw)).toEqual(["don’t", "think"]);
   });
 
   it("only suggests a correction that is plausibly a typo", () => {
@@ -87,9 +87,9 @@ describe("parse", () => {
   it("reads taught move words for the foot and the full body", () => {
     const { parse: read } = createInterpreter({
       ...vocabulary,
-      words: { ...vocabulary.words, moves: { ...vocabulary.words.moves, stomp: "lower", explode: "full" } },
+      words: { ...vocabulary.words, moves: { ...vocabulary.words.moves, stamp: "lower", launch: "full" } },
     });
-    const r = read("stomp the edge, then explode up");
+    const r = read("stamp the edge, then launch up");
     expect(r.beats.map(b => [b.part, b.move, say(b)])).toEqual([
       ["foot", "lower", "Foot move to an edge."],
       ["body", "full", "Full-body move."],
@@ -144,7 +144,7 @@ describe("parse", () => {
 
   it("keeps a plural hold plural when it merges with a singular one", () => {
     const [b] = parse("hands on the crimps at the back of the slopey rail").beats;
-    expect([b.holds[0].plural, say(b)]).toEqual([["crimp"], "Both hands: on crimps sloper rail."]);
+    expect([b.holds[0].plural, say(b)]).toEqual([["crimp"], "Both hands: on back crimps sloper rail."]);
   });
 
   it("returns nothing for empty text", () => {
