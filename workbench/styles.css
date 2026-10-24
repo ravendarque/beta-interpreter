@@ -474,64 +474,6 @@ h2 {
 }
 
 /* Reading card */
-.spectrum {
-  display: flex;
-  gap: 2px;
-  block-size: 10px;
-}
-
-.seg {
-  background: var(--c);
-  min-inline-size: 3px;
-  box-shadow: 0 0 8px color-mix(in srgb, var(--c) 40%, transparent);
-}
-
-.seg.k-unknown {
-  background: repeating-linear-gradient(135deg, var(--warn) 0 3px, transparent 3px 6px);
-}
-
-.spec-key {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 2px 10px;
-  margin: 0;
-  font-size: 0.72rem;
-}
-
-.spec-key div {
-  display: flex;
-  justify-content: space-between;
-  gap: 6px;
-  border-bottom: 1px dotted var(--rule);
-}
-
-.spec-key div.zero {
-  opacity: 0.4;
-}
-
-.spec-key dt {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--muted);
-}
-
-.spec-key dd {
-  margin: 0;
-  font-family: var(--mono);
-  font-size: 0.68rem;
-}
-
-.sw {
-  display: inline-block;
-  inline-size: 7px;
-  block-size: 7px;
-  background: var(--c);
-}
-
-.sw.k-unknown {
-  background: repeating-linear-gradient(135deg, var(--warn) 0 2px, transparent 2px 4px);
-}
 
 
 /* Tokens in running text */
@@ -1086,20 +1028,64 @@ fieldset {
   min-inline-size: 0;
 }
 
-.trace-summary .spectrum {
-  flex: 0 1 260px;
-  min-inline-size: 80px;
-}
-
-.trace-summary .spec-key {
+.facet-metrics {
   display: flex;
   flex-wrap: wrap;
-  gap: 2px 12px;
+  gap: 4px;
+  margin: 0;
 }
 
-.trace-summary .spec-key div {
-  border: 0;
-  gap: 4px;
+.fm {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 1px 10px 1px 8px;
+  border: 1px solid transparent;
+  border-inline-start: 2px solid var(--c);
+  background: color-mix(in srgb, var(--c) 8%, transparent);
+  transition: opacity 120ms, background 120ms, box-shadow 120ms;
+}
+
+.fm.k-unknown {
+  border-inline-start-style: dashed;
+}
+
+.fm dd {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 1rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--hi);
+  font-variation-settings: "wdth" 80;
+}
+
+.fm dt {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--c);
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+}
+
+.fm .sw {
+  display: none;
+}
+
+.fm.zero {
+  opacity: 0.35;
+}
+
+.fm.dim {
+  opacity: 0.25;
+}
+
+.fm.lit {
+  opacity: 1;
+  border-color: var(--c);
+  background: color-mix(in srgb, var(--c) 22%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--c) 45%, transparent);
 }
 
 /* Token trace strip */

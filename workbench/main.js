@@ -235,31 +235,34 @@ function renderSpectrum() {
   if (!r) return;
   /** @type {Record<string, number>} */
   const counts = Object.fromEntries(SPECTRUM.map(f => [f, 0]));
-  for (const t of r.trace) {
-    if (t.kind === "split") continue;
-    const f = facetOfTrace(t);
-    counts[f in counts ? f : "stop"]++;
-  }
-  const total = Object.values(counts).reduce((a, b) => a + b, 0) || 1;
+  for (const t of r.trace) if (t.kind !== "split") counts[legendKey(t)]++;
   $("c-spectrum").replaceChildren(
     h(
-      "div",
-      { class: "spectrum", role: "img", "aria-label": SPECTRUM.map(f => `${counts[f]} ${f}`).join(", ") },
-      SPECTRUM.filter(f => counts[f]).map(f =>
-        h("span", { class: `seg f-${f} k-${f}`, style: `flex-grow:${counts[f] / total}` }),
-      ),
-    ),
-    h(
       "dl",
-      { class: "spec-key" },
+      { class: "facet-metrics" },
       SPECTRUM.map(f =>
-        h("div", { class: counts[f] ? "" : "zero" }, [
-          h("dt", {}, [h("i", { class: `sw f-${f} k-${f}` }), f]),
+        h("div", { class: `fm f-${f} k-${f}${counts[f] ? "" : " zero"}`, "data-facet": f }, [
           h("dd", { text: String(counts[f]) }),
+          h("dt", {}, [h("i", { class: "sw" }), f]),
         ]),
       ),
     ),
   );
+}
+
+/** @param {Trace} t */
+function legendKey(t) {
+  const f = facetOfTrace(t);
+  return SPECTRUM.includes(f) ? f : "stop";
+}
+
+/** @param {string | null} facet */
+function lightFacet(facet) {
+  for (const el of document.querySelectorAll("#c-spectrum .fm")) {
+    const on = /** @type {HTMLElement} */ (el).dataset.facet === facet;
+    el.classList.toggle("lit", on);
+    el.classList.toggle("dim", facet !== null && !on);
+  }
 }
 
 function renderStepsCard() {
@@ -1229,6 +1232,14 @@ function wire() {
       renderDashboard();
     }
   });
+  /** @param {Event} e */
+  const hover = e => {
+    const el = /** @type {HTMLElement | null} */ (/** @type {Element} */ (e.target).closest?.("[data-i]") ?? null);
+    const t = el ? state.reading?.trace[Number(el.dataset.i)] : undefined;
+    lightFacet(t && t.kind !== "split" ? legendKey(t) : null);
+  };
+  for (const type of ["mouseover", "focusin"]) document.addEventListener(type, hover);
+  for (const type of ["mouseleave", "focusout"]) $("tape").addEventListener(type, () => lightFacet(null));
   $("detail-close").addEventListener("click", closeDetail);
   document.addEventListener("keydown", e => {
     if (e.key === "Escape" && state.view) closeDetail();
