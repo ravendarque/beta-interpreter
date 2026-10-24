@@ -16,8 +16,9 @@ describe("a full beta written by the maintainer", () => {
     expect(r.features.map(t => t.id)).toEqual([]);
   });
 
-  it("keeps a step it cannot read, marked as unread", () => {
-    expect(r.beats[2]).toMatchObject({ unread: true });
+  it("reads every step once its words are taught", () => {
+    expect(r.beats.map(b => !!b.unread)).toEqual([false, false, false, false, false]);
+    expect(r.beats[2].moves.map(t => t.id)).toEqual(["dyno"]);
   });
 
   it("gives the lip to a hand, not the left foot", () => {
@@ -29,7 +30,7 @@ describe("a full beta written by the maintainer", () => {
     expect(r.beats.some(b => b.crux)).toBe(false);
   });
 
-  it("does not claim full confidence while a step is unread", () => {
+  it("does not claim full confidence while a limb is unplaced", () => {
     const c = confidence(r, toMovements(r));
     expect(c.score).toBeLessThan(1);
   });

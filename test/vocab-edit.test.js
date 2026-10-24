@@ -37,7 +37,10 @@ describe("vocabulary edits", () => {
 
   it("moves a phrase from one term to another", () => {
     const terms = movePhrase(fresh().terms, "dyno", "jump", "dynoed");
-    expect([matchOf(terms, "dyno"), matchOf(terms, "jump")]).toEqual([["dyno"], ["jump", "dynoed"]]);
+    expect([matchOf(terms, "dyno"), matchOf(terms, "jump")]).toEqual([
+      ["dyno", "explode"],
+      ["jump", "dynoed"],
+    ]);
   });
 
   it("lists every term a phrase belongs to", () => {
@@ -46,9 +49,9 @@ describe("vocabulary edits", () => {
 
   it("adds a word to a grammar list", () => {
     expect(addWord(fresh().words, "filler", "Securely").filler).toContain("securely");
-    expect(addWord(fresh().words, "qualifiers", "hard").qualifiers).toContain("hard");
+    expect(addWord(fresh().words, "qualifiers", "rough").qualifiers).toContain("rough");
     expect(addWord(fresh().words, "moves", "slap", [], "upper").moves.slap).toBe("upper");
-    expect(addWord(fresh().words, "moves", "stomp", [], "lower").moves.stomp).toBe("lower");
+    expect(addWord(fresh().words, "moves", "stamp", [], "lower").moves.stamp).toBe("lower");
   });
 
   it("refuses a word already in any grammar list, a term phrase, more than one word, or an unknown list", () => {

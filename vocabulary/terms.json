@@ -652,7 +652,7 @@
       "name": "Dyno",
       "facets": ["transition"],
       "region": "upper",
-      "match": ["dyno", "dynoed"]
+      "match": ["dyno", "dynoed", "explode"]
     },
     {
       "id": "fire-up",

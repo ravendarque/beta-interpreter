@@ -15,8 +15,8 @@ describe("groupQuestions", () => {
   });
 
   it("lists steps it could not read, with their words", () => {
-    const q = groupQuestions(parse("left hand on the jug. Explode upwards, then dyno to the lip"));
-    expect([q.unread, q.total]).toEqual([[{ clause: 1, text: "Explode upwards" }], 1]);
+    const q = groupQuestions(parse("left hand on the jug. Zorp upwards, then dyno to the lip"));
+    expect([q.unread, q.total]).toEqual([[{ clause: 1, text: "Zorp upwards" }], 1]);
   });
 
   it("counts ambiguities and contradictions as open questions", () => {
