@@ -26,30 +26,13 @@
     </header>
 
     <main class="dash" id="dash">
-      <section class="card a-reading" aria-labelledby="t-reading">
-        <header class="card-head">
-          <h2 id="t-reading">Reading</h2>
-          <button type="button" class="open" data-open="reading">Details</button>
-        </header>
-        <div class="card-body" id="c-reading"></div>
-      </section>
-
-      <section class="card a-questions" aria-labelledby="t-questions">
-        <header class="card-head">
-          <h2 id="t-questions">Open questions</h2>
-          <button type="button" class="open" data-open="questions">Details</button>
-        </header>
-        <div class="card-body" id="c-questions"></div>
-      </section>
-
       <section class="core a-core" aria-label="Beta and scope">
         <div class="input">
           <label for="beta" class="input-label">
             <span>Beta</span>
             <span class="hint">Kept in this tab only. Nothing you paste is saved.</span>
           </label>
-          <textarea id="beta" spellcheck="false" autocomplete="off" rows="4"></textarea>
-          <div class="samples" id="samples" aria-label="Sample betas"></div>
+          <textarea id="beta" spellcheck="false" autocomplete="off" rows="4" placeholder="Paste or type a beta"></textarea>
         </div>
         <div class="scope-wrap">
           <svg class="scope" id="scope" viewBox="0 0 400 400" role="img" aria-labelledby="scope-title">
@@ -65,6 +48,22 @@
           <button type="button" class="open" data-open="movements">Details</button>
         </header>
         <div class="card-body" id="c-movements"></div>
+      </section>
+
+      <section class="card a-steps" aria-labelledby="t-steps">
+        <header class="card-head">
+          <h2 id="t-steps">Steps</h2>
+          <button type="button" class="open" data-open="steps">Details</button>
+        </header>
+        <div class="card-body" id="c-steps"></div>
+      </section>
+
+      <section class="card a-questions" aria-labelledby="t-questions">
+        <header class="card-head">
+          <h2 id="t-questions">Open questions</h2>
+          <button type="button" class="open" data-open="questions">Details</button>
+        </header>
+        <div class="card-body" id="c-questions"></div>
       </section>
 
       <form class="card a-rate" id="rating" aria-labelledby="t-rate">
@@ -98,7 +97,8 @@
 
       <section class="card a-trace" aria-labelledby="t-trace">
         <header class="card-head">
-          <h2 id="t-trace">Token trace</h2>
+          <h2 id="t-trace">Reading</h2>
+          <div class="trace-summary" id="c-spectrum"></div>
           <button type="button" class="open" data-open="reading">Details</button>
         </header>
         <div class="tape-wrap"><ol class="tape" id="tape" aria-label="Token trace"></ol></div>

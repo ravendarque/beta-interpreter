@@ -237,15 +237,18 @@ h1 span {
   .dash {
     block-size: calc(100dvh - 48px);
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1.15fr) minmax(0, 0.9fr) minmax(0, 0.95fr) 108px;
+    grid-template-rows: repeat(6, minmax(0, 1fr)) 124px;
     grid-template-areas:
-      "reading core movements"
-      "reading core rate"
-      "questions core vocab"
+      "movements core questions"
+      "movements core questions"
+      "movements core rate"
+      "steps core rate"
+      "steps core vocab"
+      "steps core vocab"
       "trace trace trace";
   }
-  .a-reading {
-    grid-area: reading;
+  .a-steps {
+    grid-area: steps;
   }
   .a-questions {
     grid-area: questions;
@@ -530,11 +533,6 @@ h2 {
   background: repeating-linear-gradient(135deg, var(--warn) 0 2px, transparent 2px 4px);
 }
 
-.mini-read {
-  font-size: 0.86rem;
-  line-height: 1.85;
-  overflow: hidden;
-}
 
 /* Tokens in running text */
 .tok {
@@ -840,24 +838,6 @@ textarea:focus-visible {
   box-shadow: 0 0 0 1px var(--rule-hi), 0 0 18px -6px var(--glow);
 }
 
-.samples {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.sample {
-  padding: 1px 8px;
-  border: 1px solid var(--rule);
-  background: transparent;
-  color: var(--muted);
-  font-size: 0.72rem;
-}
-
-.sample:hover {
-  color: var(--hi);
-  border-color: var(--rule-hi);
-}
 
 /* Movements card */
 .mv-list {
@@ -900,6 +880,45 @@ textarea:focus-visible {
 
 .mv-list .to {
   color: var(--hold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.step-list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8rem;
+}
+
+.step-list li {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 6px;
+  align-items: baseline;
+  padding: 2px 6px;
+  background: var(--inset);
+  border-inline-start: 2px solid var(--rule);
+}
+
+.step-list li.crux {
+  border-color: var(--transition);
+}
+
+.step-list li.has-issue .say {
+  color: var(--transition);
+}
+
+.step-list .n {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  color: var(--muted);
+}
+
+.step-list .say {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1047,6 +1066,40 @@ fieldset {
 .ghost.danger:not(:disabled):hover {
   border-color: var(--warn);
   color: var(--warn);
+}
+
+/* Reading strip: spectrum summary and token trace */
+.a-trace .card-head {
+  justify-content: flex-start;
+  gap: 16px;
+}
+
+.a-trace .open {
+  margin-inline-start: auto;
+}
+
+.trace-summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.trace-summary .spectrum {
+  flex: 0 1 260px;
+  min-inline-size: 80px;
+}
+
+.trace-summary .spec-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+}
+
+.trace-summary .spec-key div {
+  border: 0;
+  gap: 4px;
 }
 
 /* Token trace strip */

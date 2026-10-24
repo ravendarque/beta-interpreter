@@ -18,18 +18,6 @@ import { renderScope } from "./scope.js";
  * @typedef {"reading" | "questions" | "movements" | "steps" | "json" | "vocabulary"} View
  */
 
-const SAMPLES = {
-  "Establish, then fire": "get the left hand securely on the slopey crimp, then fire up for the hero jug",
-  "Establish, then bump": "get the left hand securely on the slopey crimp, then big bump to the hero jug",
-  "Steep boulder":
-    "Steep cave. Both hands matched on the jug, right heel hook on the lip, cross left hand to a sidepull crimp, then deadpoint to the slopey pinch, crux! Match and rock over to finish.",
-  Slab: "Slab. Smear the left foot, palm down on the dish, rockover onto the right foot inside edge and lock off to the crimp.",
-  Crack: "Offwidth corner: arm bar and heel-toe cam, chicken wing up to the hand jam in the crack.",
-  "Typed in a rush": "rh slopper undercut, lf toe hok, campus to the jugg, bump to the horn",
-  Ambiguous: "Overhanging arête. Squeeze it with compression, jam in the crack, flag and paddle up the rail.",
-  Contradiction: "Left hand heel hook on the ledge, then mantle.",
-};
-
 /** @type {[View, string][]} */
 const VIEWS = [
   ["reading", "Reading"],
@@ -187,7 +175,8 @@ function run() {
 function renderDashboard() {
   renderSysline();
   renderCore();
-  renderReadingCard();
+  renderStepsCard();
+  renderSpectrum();
   renderQuestionsCard();
   renderMovementsCard();
   renderVocabCard();
@@ -241,7 +230,7 @@ function renderCore() {
   );
 }
 
-function renderReadingCard() {
+function renderSpectrum() {
   const r = state.reading;
   if (!r) return;
   /** @type {Record<string, number>} */
@@ -252,7 +241,7 @@ function renderReadingCard() {
     counts[f in counts ? f : "stop"]++;
   }
   const total = Object.values(counts).reduce((a, b) => a + b, 0) || 1;
-  $("c-reading").replaceChildren(
+  $("c-spectrum").replaceChildren(
     h(
       "div",
       { class: "spectrum", role: "img", "aria-label": SPECTRUM.map(f => `${counts[f]} ${f}`).join(", ") },
@@ -270,7 +259,32 @@ function renderReadingCard() {
         ]),
       ),
     ),
-    h("p", { class: "mini-read" }, [readback({ compact: true })]),
+  );
+}
+
+function renderStepsCard() {
+  const r = state.reading;
+  if (!r) return;
+  const cruxAt = r.beats.findIndex(b => b.crux);
+  const issues = r.beats.reduce((n, b) => n + b.issues.length, 0);
+  $("c-steps").replaceChildren(
+    h("dl", { class: "figures" }, [
+      figure("Steps", r.beats.length),
+      figure("Crux", cruxAt >= 0 ? `#${cruxAt + 1}` : "none"),
+      figure("Contradictions", issues, issues > 0),
+    ]),
+    r.beats.length
+      ? h(
+          "ol",
+          { class: "step-list" },
+          r.beats.map((b, i) =>
+            h("li", { class: `${b.crux ? "crux" : ""}${b.issues.length ? " has-issue" : ""}` }, [
+              h("span", { class: "n", text: String(i + 1) }),
+              h("span", { class: "say", text: say(b) }),
+            ]),
+          ),
+        )
+      : h("p", { class: "empty", text: "Steps appear here as the beta is read." }),
   );
 }
 
@@ -389,8 +403,7 @@ function renderTape() {
   );
 }
 
-/** @param {{ compact?: boolean }} [opts] */
-function readback({ compact = false } = {}) {
+function readback() {
   const r = state.reading;
   const text = beta.value;
   const frag = document.createDocumentFragment();
@@ -411,16 +424,14 @@ function readback({ compact = false } = {}) {
     const cls = `tok k-${t.kind} f-${facetOfTrace(t)}${span?.ambiguous ? " amb" : ""}${t.fuzzy?.length ? " fz" : ""}${sel}`;
     const label = `${KIND_LABEL[t.kind]}${span?.term ? `: ${span.term.name}` : ""}`;
     frag.append(
-      compact
-        ? h("span", { class: cls, text: t.text })
-        : h("button", {
-            type: "button",
-            class: cls,
-            "data-i": i,
-            title: label,
-            "aria-label": `${t.text}, ${label}`,
-            text: t.text,
-          }),
+      h("button", {
+        type: "button",
+        class: cls,
+        "data-i": i,
+        title: label,
+        "aria-label": `${t.text}, ${label}`,
+        text: t.text,
+      }),
     );
   });
   frag.append(text.slice(at));
@@ -1188,21 +1199,6 @@ function wire() {
     state.resolutions.clear();
     run();
   });
-  $("samples").replaceChildren(
-    ...Object.entries(SAMPLES).map(([name, text]) => {
-      const b = h("button", { type: "button", class: "sample", text: name });
-      b.addEventListener("click", () => {
-        beta.value = text;
-        state.resolutions.clear();
-        state.ignored.clear();
-        state.picked.clear();
-        state.selected = null;
-        resetRating();
-        run();
-      });
-      return b;
-    }),
-  );
   document.addEventListener("click", e => {
     const el = /** @type {HTMLElement | null} */ (
       /** @type {Element} */ (e.target).closest(
@@ -1279,7 +1275,6 @@ async function start() {
     );
     return;
   }
-  beta.value = SAMPLES["Steep boulder"];
   run();
 }
 
