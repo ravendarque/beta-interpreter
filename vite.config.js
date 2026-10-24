@@ -1,15 +1,16 @@
 import { defineConfig } from "vite";
 
-// Loaded at serve time so Vite doesn't treat the parser as part of its config and restart when it changes.
-const api = () => import(/* @vite-ignore */ new URL("./workbench/api.js", import.meta.url).href);
-
 export default defineConfig({
   root: "workbench",
   plugins: [
     {
       name: "beta-interpreter-workbench-api",
-      async configureServer(server) {
-        (await api()).workbenchApi().configureServer(server);
+      configureServer(server) {
+        // Loaded through Vite so edits to the API or the parser apply without restarting the server.
+        server.middlewares.use(async (req, res, next) => {
+          const api = await server.ssrLoadModule("/api.js");
+          await api.handle(req, res, next);
+        });
       },
     },
   ],

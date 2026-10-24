@@ -16,7 +16,7 @@
  *   limbs: Record<string, Limb>,
  *   prepositions: Record<string, string>,
  *   crux: string[],
- *   handMoves: string[],
+ *   moves: Record<string, string>,
  *   qualifiers: string[],
  *   filler: string[],
  *   splitAlways: string[],
@@ -35,7 +35,7 @@
  *   crux: boolean,
  *   issues: string[],
  *   clause: number,
- *   handMove?: boolean,
+ *   move?: string,
  *   qualifiers: string[],
  *   unread?: boolean,
  * }} Beat
@@ -60,7 +60,8 @@
  *   | { kind: "term", key: string, senses: Term[], plural: boolean, fz: string[] }
  *   | { kind: "limb", side?: string, part?: string }
  *   | { kind: "prep", role: string }
- *   | { kind: "crux" | "break" | "filler" | "handmove" }
+ *   | { kind: "crux" | "break" | "filler" }
+ *   | { kind: "move", region: string }
  *   | { kind: "qualifier", word: string }
  *   | { kind: "unknown", raw: string, guess?: string }
  * )} Item
@@ -75,6 +76,9 @@ export const norm = s =>
     .replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9']+/g, " ")
     .trim();
+
+/** @type {Record<string, string>} */
+const REGION_PART = { upper: "hand", lower: "foot", full: "body" };
 
 /** @param {Term} term */
 export const facetOf = term => term.facets[0];
@@ -107,7 +111,7 @@ export function createInterpreter({ terms, words }) {
   const limbs = new Map(Object.entries(words.limbs));
   const preps = new Map(Object.entries(words.prepositions));
   const crux = new Set(words.crux);
-  const handMoves = new Set(words.handMoves);
+  const moveWords = new Map(Object.entries(words.moves));
   const qualifiers = new Set(words.qualifiers);
   const filler = new Set(words.filler);
   const splitAlways = new Set(words.splitAlways);
@@ -154,7 +158,7 @@ export function createInterpreter({ terms, words }) {
     preps.has(w) ||
     filler.has(w) ||
     crux.has(w) ||
-    handMoves.has(w) ||
+    moveWords.has(w) ||
     qualifiers.has(w) ||
     splitBeforeMove.has(w) ||
     vocabWords.includes(w) ||
@@ -162,7 +166,7 @@ export function createInterpreter({ terms, words }) {
 
   /** @param {string} key @param {string | null} named */
   const startsStep = (key, named) =>
-    handMoves.has(key) ||
+    moveWords.has(key) ||
     (lookup(key)?.senses ?? []).some(
       s => facetOf(s) === "transition" || (facetOf(s) === "position" && !fits(named, s.part)),
     );
@@ -253,8 +257,8 @@ export function createInterpreter({ terms, words }) {
               ? { kind: "prep", role, ...at }
               : crux.has(w)
                 ? { kind: "crux", ...at }
-                : handMoves.has(w)
-                  ? { kind: "handmove", ...at }
+                : moveWords.has(w)
+                  ? { kind: "move", region: /** @type {string} */ (moveWords.get(w)), ...at }
                   : qualifiers.has(w)
                     ? { kind: "qualifier", word: w, ...at }
                     : splitBeforeMove.has(w)
@@ -293,8 +297,8 @@ export function createInterpreter({ terms, words }) {
         if (m.kind === "limb") {
           beat.side = m.side || beat.side;
           beat.part = m.part || beat.part;
-        } else if (m.kind === "handmove") beat.handMove = true;
-      if (beat.handMove && !beat.part) beat.part = "hand";
+        } else if (m.kind === "move") beat.move = m.region;
+      if (beat.move && !beat.part) beat.part = REGION_PART[beat.move] ?? null;
       /** @type {string | null} */
       let role = null;
       /** @type {Term | null} */
@@ -318,7 +322,7 @@ export function createInterpreter({ terms, words }) {
           beat.crux = true;
           continue;
         }
-        if (m.kind === "handmove") {
+        if (m.kind === "move") {
           rockRun = false;
           continue;
         }
@@ -400,7 +404,7 @@ export function createInterpreter({ terms, words }) {
         beat.order.push({ kind: "hold", hold });
       }
       beat.qualifiers.push(...pendingQ);
-      for (const h of beat.holds) h.role ||= beat.moves.length || beat.handMove ? "target" : "on";
+      for (const h of beat.holds) h.role ||= beat.moves.length || beat.move ? "target" : "on";
       if (!beat.part && beat.pos.length) beat.part = beat.pos[0].part ?? null;
       if (!beat.part && beat.moves.some(m => m.region === "upper")) beat.part = "hand";
       if (!beat.moves.length && !beat.pos.length && !beat.side && !beat.part) {

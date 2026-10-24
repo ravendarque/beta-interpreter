@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parse, say } from "../src/index.js";
+import { createInterpreter, parse, say, vocabulary } from "../src/index.js";
 
 describe("parse", () => {
   it("applies a resolution to an ambiguous word", () => {
@@ -77,10 +77,22 @@ describe("parse", () => {
 
   it("reads reach, catch and grab as an unnamed hand move", () => {
     const r = parse("reach the jug, catch the sloper, grab the crimp");
-    expect(r.beats.map(b => [b.part, b.handMove, b.holds[0].role])).toEqual([
-      ["hand", true, "target"],
-      ["hand", true, "target"],
-      ["hand", true, "target"],
+    expect(r.beats.map(b => [b.part, b.move, b.holds[0].role, say(b)])).toEqual([
+      ["hand", "upper", "target", "Hand move to a jug."],
+      ["hand", "upper", "target", "Hand move to a sloper."],
+      ["hand", "upper", "target", "Hand move to a crimp."],
+    ]);
+  });
+
+  it("reads taught move words for the foot and the full body", () => {
+    const { parse: read } = createInterpreter({
+      ...vocabulary,
+      words: { ...vocabulary.words, moves: { ...vocabulary.words.moves, stomp: "lower", explode: "full" } },
+    });
+    const r = read("stomp the edge, then explode up");
+    expect(r.beats.map(b => [b.part, b.move, say(b)])).toEqual([
+      ["foot", "lower", "Foot move to an edge."],
+      ["body", "full", "Full-body move."],
     ]);
   });
 

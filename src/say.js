@@ -6,6 +6,8 @@ const art = w => (/^[aeiou]/i.test(w) ? "an" : "a");
 const ROLE = { start: "from", target: "to", on: "on" };
 /** @type {Record<string, string>} */
 const PLURAL = { foot: "feet" };
+/** @type {Record<string, string>} */
+const MOVE_NAME = { upper: "hand move", lower: "foot move", full: "full-body move" };
 /** @param {string} s */
 const cap = s => s[0].toUpperCase() + s.slice(1);
 
@@ -21,7 +23,10 @@ export function who(b) {
 /** @param {string} w */
 const pluralWord = w => (/(s|sh|ch|x|z)$/.test(w) ? `${w}es` : /[^aeiou]y$/.test(w) ? `${w.slice(0, -1)}ies` : `${w}s`);
 /** @param {string} name */
-const pluralName = name => name.replace(/\S+$/, pluralWord);
+const pluralName = name => {
+  const at = name.lastIndexOf(" ") + 1;
+  return name.slice(0, at) + pluralWord(name.slice(at));
+};
 
 /** @param {Hold} h */
 export function holdName(h) {
@@ -39,7 +44,7 @@ function holdPhrase(h) {
 /** @param {Beat} b */
 export function say(b) {
   const names = [...b.moves, ...b.pos].map(x => x.name.toLowerCase());
-  if (b.handMove && !b.moves.length) names.unshift("hand move");
+  if (b.move && !b.moves.length) names.unshift(MOVE_NAME[b.move] ?? "move");
   const actions = names.join(", ");
   const body = [actions, ...b.holds.map(holdPhrase)].filter(Boolean).join(" ");
   const w = who(b);

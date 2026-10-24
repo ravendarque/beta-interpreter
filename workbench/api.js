@@ -2,7 +2,7 @@ import { execFile } from "node:child_process";
 import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { promisify } from "node:util";
 import { ratingRecord } from "./ratings.js";
-import { addPhrase, addFillerWords, movePhrase, removePhrase } from "./vocab-edit.js";
+import { addPhrase, addWords, movePhrase, removePhrase } from "./vocab-edit.js";
 
 const run = promisify(execFile);
 const root = new URL("..", import.meta.url);
@@ -58,11 +58,10 @@ const POST = {
     await writeJson(TERMS, { terms: next });
     return { ok: true };
   },
-  async "/api/vocabulary/filler"({ words: list }) {
-    if (!Array.isArray(list) || !list.every(w => typeof w === "string"))
-      throw new Error("Send the filler words as a list.");
+  async "/api/vocabulary/words"({ list, words: items, region }) {
+    if (!Array.isArray(items) || !items.every(w => typeof w === "string")) throw new Error("Send the words as a list.");
     const [{ terms }, words] = await Promise.all([readJson(TERMS), readJson(WORDS)]);
-    const result = addFillerWords(words, list, terms);
+    const result = addWords(words, list, items, terms, region);
     if (result.added.length) await writeJson(WORDS, result.words);
     return { added: result.added, skipped: result.skipped };
   },
@@ -103,27 +102,24 @@ function isLocalJson(req) {
   return local && req.headers["content-type"]?.startsWith("application/json") === true;
 }
 
-/** @returns {import("vite").Plugin} */
-export function workbenchApi() {
-  return {
-    name: "beta-interpreter-workbench-api",
-    configureServer(server) {
-      server.middlewares.use(async (req, res, next) => {
-        const path = req.url?.split("?")[0] ?? "";
-        const handler = req.method === "POST" ? POST[path] : req.method === "GET" ? GET[path] : undefined;
-        if (!handler) return next();
-        if (req.method === "POST" && !isLocalJson(req)) {
-          res.statusCode = 403;
-          return res.end();
-        }
-        res.setHeader("Content-Type", "application/json");
-        try {
-          res.end(JSON.stringify(await handler(req.method === "POST" ? await body(req) : undefined)));
-        } catch (e) {
-          res.statusCode = 400;
-          res.end(JSON.stringify({ error: e instanceof Error ? e.message : String(e) }));
-        }
-      });
-    },
-  };
+/**
+ * @param {import("node:http").IncomingMessage} req
+ * @param {import("node:http").ServerResponse} res
+ * @param {() => void} next
+ */
+export async function handle(req, res, next) {
+  const path = req.url?.split("?")[0] ?? "";
+  const handler = req.method === "POST" ? POST[path] : req.method === "GET" ? GET[path] : undefined;
+  if (!handler) return next();
+  if (req.method === "POST" && !isLocalJson(req)) {
+    res.statusCode = 403;
+    return res.end();
+  }
+  res.setHeader("Content-Type", "application/json");
+  try {
+    res.end(JSON.stringify(await handler(req.method === "POST" ? await body(req) : undefined)));
+  } catch (e) {
+    res.statusCode = 400;
+    res.end(JSON.stringify({ error: e instanceof Error ? e.message : String(e) }));
+  }
 }

@@ -69,7 +69,11 @@
     "with": "on"
   },
   "crux": ["crux"],
-  "handMoves": ["reach", "catch", "grab"],
+  "moves": {
+    "reach": "upper",
+    "catch": "upper",
+    "grab": "upper"
+  },
   "qualifiers": [
     "high",
     "low",

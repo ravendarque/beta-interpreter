@@ -87,7 +87,7 @@ function place(state, at, part, { hold, technique }) {
 /** @param {Beat} beat */
 const closes = beat =>
   beat.moves.length > 0 ||
-  !!beat.handMove ||
+  !!beat.move ||
   beat.order.some(p => (p.kind === "hold" ? p.hold.role === "target" : p.kind === "position" && p.role === "target"));
 
 /** @param {Reading} reading @returns {MovementRecord} */

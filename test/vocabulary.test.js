@@ -40,7 +40,7 @@ describe("vocabulary", () => {
       limbs: Object.keys(words.limbs),
       prepositions: Object.keys(words.prepositions),
       crux: words.crux,
-      handMoves: words.handMoves,
+      moves: Object.keys(words.moves),
       qualifiers: words.qualifiers,
       filler: words.filler,
     };
@@ -52,5 +52,10 @@ describe("vocabulary", () => {
       }
     const phrases = new Set(terms.flatMap(t => t.match.map(norm)));
     expect(words.filler.filter(w => phrases.has(w))).toEqual([]);
+  });
+
+  it("gives every move word a taxonomy region", () => {
+    for (const [w, region] of Object.entries(words.moves))
+      expect([w, REGIONS]).toEqual([w, expect.arrayContaining([region])]);
   });
 });

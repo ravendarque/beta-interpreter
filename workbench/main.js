@@ -48,7 +48,7 @@ const KIND_LABEL = {
   prep: "role",
   crux: "crux",
   break: "join",
-  handmove: "hand move",
+  move: "move",
   qualifier: "qualifier",
   filler: "filler",
   unknown: "unknown",
@@ -140,7 +140,7 @@ function facetOfTrace(t) {
   if (t.kind === "term") return spanOf(t)?.facet ?? "term";
   if (t.kind === "prep" || t.kind === "crux") return "limb";
   if (t.kind === "break") return "filler";
-  if (t.kind === "handmove") return "transition";
+  if (t.kind === "move") return "transition";
   return t.kind;
 }
 /** @param {import("../src/interpreter.js").Hold | null} hold */
@@ -628,21 +628,19 @@ function detailQuestions() {
       ),
     ),
   );
-  const filler = h("button", {
-    type: "button",
-    class: "primary",
-    disabled: !picked.length,
-    text: picked.length ? `Mark ${picked.length} as filler` : "Mark as filler",
-  });
-  filler.addEventListener("click", () =>
-    correct("/api/vocabulary/filler", { words: picked }, result => {
+  const teachButtons = TEACH.map((option, i) => {
+    const b = h("button", {
+      type: "button",
+      class: i === 0 ? "primary" : "ghost",
+      disabled: !picked.length,
+      text: picked.length ? `Mark ${picked.length} as ${option.label}` : `Mark as ${option.label}`,
+    });
+    b.addEventListener("click", () => {
       state.picked.clear();
-      const skipped = result.skipped?.length
-        ? ` Skipped ${result.skipped.map((/** @type {{word: string}} */ x) => x.word).join(", ")}.`
-        : "";
-      return `Added ${result.added.length} filler word${result.added.length === 1 ? "" : "s"}.${skipped}`;
-    }),
-  );
+      teachWords(option, picked);
+    });
+    return b;
+  });
   const ignore = h("button", {
     type: "button",
     class: "ghost",
@@ -681,7 +679,7 @@ function detailQuestions() {
               text: "Select words that carry no meaning for the record, then mark them as filler. Filler becomes filler words in vocabulary/words.json.",
             }),
             cloud,
-            h("div", { class: "bulk" }, [filler, ignore, teach, all]),
+            h("div", { class: "bulk" }, [...teachButtons, ignore, teach, all]),
           ]
         : [h("p", { class: "empty", text: "None." })],
       "wide",
@@ -695,6 +693,30 @@ function detailQuestions() {
       ),
     );
   return [h("div", { class: "pane-grid" }, out)];
+}
+
+/** @typedef {{ list: string, region?: string, label: string }} TeachOption */
+/** @type {TeachOption[]} */
+const TEACH = [
+  { list: "filler", label: "filler" },
+  { list: "qualifiers", label: "qualifier" },
+  { list: "moves", region: "upper", label: "hand move" },
+  { list: "moves", region: "lower", label: "foot move" },
+  { list: "moves", region: "full", label: "full-body move" },
+];
+
+/** @param {TeachOption} option @param {string[]} items */
+function teachWords(option, items) {
+  return correct("/api/vocabulary/words", { list: option.list, region: option.region, words: items }, result => {
+    const added = /** @type {string[]} */ (result.added ?? []);
+    const skipped = /** @type {{ word: string, reason: string }[]} */ (result.skipped ?? []);
+    const done = added.length
+      ? added.length === 1
+        ? `“${added[0]}” is now a ${option.label}.`
+        : `Added ${added.length} words as ${option.label}.`
+      : "Nothing added.";
+    return skipped.length ? `${done} Skipped: ${skipped.map(x => x.reason).join(" ")}` : done;
+  });
 }
 
 /** @param {string} word @param {string} to */
@@ -1153,16 +1175,17 @@ function inspector() {
       use.addEventListener("click", () => replaceWord(norm(t.text), guess));
       row.append(use);
     }
-    const filler = h("button", { type: "button", class: "ghost", text: "Mark as filler" });
-    filler.addEventListener("click", () =>
-      correct("/api/vocabulary/filler", { words: [t.text] }, () => `“${norm(t.text)}” is now a filler word.`),
-    );
+    const teachButtons = TEACH.map(option => {
+      const b = h("button", { type: "button", class: "ghost", text: `Mark as ${option.label}` });
+      b.addEventListener("click", () => teachWords(option, [t.text]));
+      return b;
+    });
     const ignore = h("button", { type: "button", class: "ghost", text: "Ignore in this session" });
     ignore.addEventListener("click", () => {
       state.ignored.add(norm(t.text));
       run();
     });
-    row.append(filler, ignore);
+    row.append(...teachButtons, ignore);
     kids.push(
       h("div", { class: "insp-actions" }, [
         h("p", { class: "state-label", text: "This means…" }),
@@ -1183,7 +1206,7 @@ function inspector() {
     /** @type {Record<string, string>} */
     const explain = {
       limb: "A limb word. It sets the side or part for its step.",
-      handmove: "A hand move with no named technique. The holds after it are where the hand goes.",
+      move: "A move word with no named technique. It says which part of the body moves; the holds after it are where it goes.",
       qualifier: "A qualifier. It describes the hold that follows it.",
       prep: `A role word. Holds after it are read as “${t.text}” holds until the next role word.`,
       crux: "Marks this step as the crux.",
