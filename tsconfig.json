@@ -12,5 +12,12 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["src/**/*.js", "test/**/*.js", "workbench/**/*.js", "vite.config.js", "vitest.config.js"]
+  "include": [
+    "src/**/*.js",
+    "test/**/*.js",
+    "workbench/**/*.js",
+    "scripts/**/*.mjs",
+    "vite.config.js",
+    "vitest.config.js"
+  ]
 }

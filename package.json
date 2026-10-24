@@ -1,17 +1,24 @@
 {
-  "name": "beta-interpreter",
+  "name": "@ravendarque/beta-interpreter",
   "version": "0.0.0",
-  "private": true,
   "description": "Rule-based interpreter that turns free-text climbing beta into a structured record.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ravendarque/beta-interpreter.git"
+  },
   "license": "SEE LICENSE IN LICENSE.md",
   "type": "module",
   "packageManager": "pnpm@12.14.0",
   "exports": {
-    ".": "./src/index.js",
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./src/index.js"
+    },
     "./vocabulary/*": "./vocabulary/*"
   },
   "files": [
     "src",
+    "types",
     "vocabulary",
     "LICENSE.md",
     "LICENSE-SCHEDULE.md"
@@ -21,7 +28,8 @@
     "lint": "biome check --error-on-warnings .",
     "format": "biome format --write .",
     "typecheck": "tsc -p .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "build:types": "tsc -p tsconfig.types.json"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
@@ -29,5 +37,8 @@
     "typescript": "7.0.2",
     "vite": "8.3.4",
     "vitest": "5.0.5"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   }
 }
