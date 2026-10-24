@@ -32,6 +32,7 @@
  *   order: Part[],
  *   crux: boolean,
  *   issues: string[],
+ *   clause: number,
  * }} Beat
  * @typedef {{ s: number, e: number, facet: string, term?: Term, ambiguous?: boolean, fuzzy?: boolean }} Span
  * @typedef {{ occ: string, word: string, options: Term[], s: number }} Ambiguity
@@ -47,7 +48,7 @@
  *   fuzzy: Fuzzy[],
  *   trace: Trace[],
  * }} Reading
- * @typedef {{ s: number, e: number, text: string, kind: string, key?: string, fuzzy?: string[], guess?: string }} Trace
+ * @typedef {{ s: number, e: number, text: string, kind: string, clause: number, key?: string, fuzzy?: string[], guess?: string }} Trace
  * @typedef {{ resolutions?: Map<string, number>, ignored?: Set<string> }} ParseOptions
  * @typedef {{ n: number, s: number, e: number }} Extent
  * @typedef {Extent & (
@@ -63,6 +64,7 @@
 export const norm = s =>
   s
     .toLowerCase()
+    .replace(/[’ʼ‘]/g, "'")
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9']+/g, " ")
@@ -161,7 +163,7 @@ export function createInterpreter({ terms, words }) {
   function parse(text, { resolutions = new Map(), ignored = new Set() } = {}) {
     /** @type {{ raw: string, n: string, s: number, e: number, sep: boolean, bang: boolean, fz?: string, guess?: string }[]} */
     const toks = [];
-    for (const m of text.matchAll(/[\p{L}\p{N}']+|[.;!,:\n—–]|->|→/gu)) {
+    for (const m of text.matchAll(/[\p{L}\p{N}'’ʼ]+|[.;!,:\n—–]|->|→/gu)) {
       const raw = m[0];
       const n = norm(raw);
       const s = m.index ?? 0;
@@ -172,7 +174,7 @@ export function createInterpreter({ terms, words }) {
         if (near && ((n.length >= 5 && near.d === 1) || (n.length >= 8 && near.d === 2))) {
           tok.fz = raw;
           tok.n = near.w;
-        } else tok.guess = near?.w;
+        } else if (near && (near.d === 1 || n.length >= 6)) tok.guess = near.w;
       }
       toks.push(tok);
     }
@@ -204,10 +206,11 @@ export function createInterpreter({ terms, words }) {
 
     /** @type {Reading} */
     const out = { terrain: [], features: [], beats: [], spans: [], amb: [], unknown: [], fuzzy: [], trace: [] };
-    for (const tok of toks) if (tok.sep) out.trace.push({ s: tok.s, e: tok.e, text: tok.raw, kind: "split" });
+    for (const tok of toks)
+      if (tok.sep) out.trace.push({ s: tok.s, e: tok.e, text: tok.raw, kind: "split", clause: 0 });
     /** @type {Record<string, number>} */
     const seen = {};
-    for (const clause of clauses) {
+    for (const [ci, clause] of clauses.entries()) {
       /** @type {Item[]} */
       const items = [];
       for (let i = 0; i < clause.length; ) {
@@ -250,6 +253,7 @@ export function createInterpreter({ terms, words }) {
           e: m.e,
           text: text.slice(m.s, m.e),
           kind: m.kind,
+          clause: 0,
           ...(m.kind === "term" ? { key: m.key, fuzzy: m.fz } : {}),
           ...(m.kind === "unknown" && m.guess ? { guess: m.guess } : {}),
         });
@@ -265,6 +269,7 @@ export function createInterpreter({ terms, words }) {
         holds: [],
         order: [],
         crux: !!clause.bang,
+        clause: ci,
         issues: [],
       };
       for (const m of items)
@@ -370,6 +375,11 @@ export function createInterpreter({ terms, words }) {
       out.beats.push(beat);
     }
     out.trace.sort((a, b) => a.s - b.s);
+    let clauseAt = 0;
+    for (const t of out.trace) {
+      if (t.kind === "split") clauseAt++;
+      t.clause = clauseAt;
+    }
     return out;
   }
 

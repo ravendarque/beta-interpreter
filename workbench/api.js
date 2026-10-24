@@ -2,7 +2,7 @@ import { execFile } from "node:child_process";
 import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { promisify } from "node:util";
 import { ratingRecord } from "./ratings.js";
-import { addPhrase, addStopWord, movePhrase, removePhrase } from "./vocab-edit.js";
+import { addPhrase, addStopWords, movePhrase, removePhrase } from "./vocab-edit.js";
 
 const run = promisify(execFile);
 const root = new URL("..", import.meta.url);
@@ -58,10 +58,13 @@ const POST = {
     await writeJson(TERMS, { terms: next });
     return { ok: true };
   },
-  async "/api/vocabulary/stop"({ word }) {
+  async "/api/vocabulary/stop"({ words: list }) {
+    if (!Array.isArray(list) || !list.every(w => typeof w === "string"))
+      throw new Error("Send the stop words as a list.");
     const [{ terms }, words] = await Promise.all([readJson(TERMS), readJson(WORDS)]);
-    await writeJson(WORDS, addStopWord(words, word, terms));
-    return { ok: true };
+    const result = addStopWords(words, list, terms);
+    if (result.added.length) await writeJson(WORDS, result.words);
+    return { added: result.added, skipped: result.skipped };
   },
   async "/api/ratings"(body) {
     const record = ratingRecord(body, { at: new Date().toISOString(), sha: (await status()).sha });
