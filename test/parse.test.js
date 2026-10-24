@@ -45,6 +45,24 @@ describe("parse", () => {
     ]);
   });
 
+  it("tags tokens and steps with their clause", () => {
+    const r = parse("lh on the jug, then fire up");
+    expect(r.trace.map(t => t.clause)).toEqual([0, 0, 0, 0, 1, 2, 2]);
+    expect(r.beats.map(b => b.clause)).toEqual([0, 2]);
+  });
+
+  it("keeps a word with a curly apostrophe together", () => {
+    expect(parse("I don’t think it’s hard").unknown.map(u => u.raw)).toEqual(["don’t", "think"]);
+  });
+
+  it("only suggests a correction that is plausibly a typo", () => {
+    const guesses = parse("did hok sloppers").unknown.map(u => [u.raw, u.guess]);
+    expect(guesses).toEqual([
+      ["did", undefined],
+      ["hok", "hook"],
+    ]);
+  });
+
   it("returns nothing for empty text", () => {
     expect(parse("")).toMatchObject({ beats: [], unknown: [], amb: [] });
   });

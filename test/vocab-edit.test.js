@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { vocabulary } from "../src/index.js";
-import { addPhrase, addStopWord, movePhrase, owners, removePhrase } from "../workbench/vocab-edit.js";
+import { addPhrase, addStopWord, addStopWords, movePhrase, owners, removePhrase } from "../workbench/vocab-edit.js";
 
 const fresh = () => structuredClone(vocabulary);
 /** @param {import("../src/interpreter.js").Term[]} terms @param {string} id */
@@ -52,5 +52,16 @@ describe("vocabulary edits", () => {
     expect(() => addStopWord(fresh().words, "the")).toThrow("“the” is already a stop word.");
     expect(() => addStopWord(fresh().words, "very good")).toThrow("A stop word is a single word.");
     expect(() => addStopWord(fresh().words, "jug", fresh().terms)).toThrow("“jug” is a vocabulary phrase (Jug).");
+  });
+
+  it("adds several stop words at once and reports the ones it skipped", () => {
+    const r = addStopWords(fresh().words, ["Think", "the", "jug", "think", "pretty"], fresh().terms);
+    expect(r.added).toEqual(["think", "pretty"]);
+    expect(r.skipped).toEqual([
+      { word: "the", reason: "“the” is already a stop word." },
+      { word: "jug", reason: "“jug” is a vocabulary phrase (Jug)." },
+      { word: "think", reason: "“think” is already a stop word." },
+    ]);
+    expect(r.words.stop.slice(-2)).toEqual(["think", "pretty"]);
   });
 });

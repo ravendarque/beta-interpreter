@@ -47,3 +47,20 @@ export function addStopWord(words, word, terms = []) {
   if (used.length) throw new Error(`“${k}” is a vocabulary phrase (${used.map(t => t.name).join(", ")}).`);
   return { ...words, stop: [...words.stop, k] };
 }
+
+/** @param {Words} words @param {string[]} list @param {Term[]} [terms] */
+export function addStopWords(words, list, terms = []) {
+  let next = words;
+  /** @type {string[]} */
+  const added = [];
+  /** @type {{ word: string, reason: string }[]} */
+  const skipped = [];
+  for (const word of list)
+    try {
+      next = addStopWord(next, word, terms);
+      added.push(next.stop[next.stop.length - 1]);
+    } catch (e) {
+      skipped.push({ word: norm(word) || word, reason: e instanceof Error ? e.message : String(e) });
+    }
+  return { words: next, added, skipped };
+}
