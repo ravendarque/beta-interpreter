@@ -235,7 +235,7 @@ h1 span {
 
 @media (min-width: 1100px) and (min-height: 620px) {
   .dash {
-    block-size: calc(100dvh - 48px);
+    block-size: calc(100dvh - 48px - 38px);
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr);
     grid-template-rows: repeat(6, minmax(0, 1fr)) 124px;
     grid-template-areas:
@@ -1179,35 +1179,20 @@ fieldset {
   background: color-mix(in srgb, var(--c, transparent) 12%, transparent);
 }
 
-/* Detail overlay */
-.detail {
-  position: fixed;
-  inset: 48px 0 0;
-  z-index: 10;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  background: color-mix(in srgb, var(--bg) 92%, transparent);
-  backdrop-filter: blur(8px);
-  border-top: 1px solid var(--rule-hi);
-}
-
-.detail[hidden] {
-  display: none;
-}
-
-.detail-head {
+/* Views */
+.tabs-main {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px 16px;
+  gap: 2px;
+  min-block-size: 38px;
+  padding: 4px 16px;
   border-bottom: 1px solid var(--rule);
 }
 
-.detail-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
+.dash[hidden],
+.detail[hidden] {
+  display: none;
 }
 
 .dtab {
@@ -1228,19 +1213,6 @@ fieldset {
   color: var(--hi);
   border-color: var(--rule-hi);
   box-shadow: 0 0 12px -2px var(--glow) inset;
-}
-
-.close {
-  padding: 3px 12px;
-  border: 1px solid var(--rule);
-  background: transparent;
-  color: var(--muted);
-  font-size: 0.76rem;
-}
-
-.close:hover {
-  color: var(--hi);
-  border-color: var(--rule-hi);
 }
 
 .detail-body {
@@ -1960,9 +1932,6 @@ button.pill:hover {
     flex-direction: column;
     align-items: flex-start;
     padding-block: 8px;
-  }
-  .detail {
-    inset-block-start: 0;
   }
   .scope-wrap {
     grid-template-columns: minmax(0, 1fr);

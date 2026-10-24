@@ -15,11 +15,12 @@ import { renderScope } from "./scope.js";
  * @typedef {import("../src/movements.js").Contact} Contact
  * @typedef {ReturnType<typeof toMovements>} MovementRecord
  * @typedef {ReturnType<typeof groupQuestions>} Questions
- * @typedef {"reading" | "questions" | "movements" | "steps" | "json" | "vocabulary"} View
+ * @typedef {"dashboard" | "reading" | "questions" | "movements" | "steps" | "json" | "vocabulary"} View
  */
 
 /** @type {[View, string][]} */
 const VIEWS = [
+  ["dashboard", "Dashboard"],
   ["reading", "Reading"],
   ["questions", "Questions"],
   ["movements", "Movements"],
@@ -64,8 +65,7 @@ const state = {
   /** @type {string[]} */ log: [],
   /** @type {{ sha: string, diff: string, changed: number } | null} */ status: null,
   /** @type {{ score: number, tags: string[] }[]} */ ratings: [],
-  /** @type {View | null} */ view: null,
-  /** @type {HTMLElement | null} */ opener: null,
+  /** @type {View} */ view: "dashboard",
 };
 
 /** @param {string} path @param {unknown} [body] */
@@ -166,7 +166,7 @@ function run() {
   state.questions = groupQuestions(reading);
   if (state.selected !== null && !reading.trace[state.selected]) state.selected = null;
   renderDashboard();
-  if (state.view) renderDetail();
+  if (state.view !== "dashboard") renderDetail();
   updateRatingButton();
 }
 
@@ -443,40 +443,36 @@ function readback() {
 
 /* Detail views */
 
-/** @param {View} view @param {HTMLElement | null} [opener] */
-function openDetail(view, opener = null) {
-  const wasOpen = state.view !== null;
+/** @param {View} view */
+function setView(view) {
+  const tabFocused = !!document.activeElement?.closest("#tabs");
   state.view = view;
-  if (!wasOpen) state.opener = opener ?? /** @type {HTMLElement | null} */ (document.activeElement);
-  $("detail").hidden = false;
-  $("dash").inert = true;
-  renderDetail();
-  if (!wasOpen)
-    /** @type {HTMLElement | null} */ (document.querySelector(`#detail-tabs [data-view="${view}"]`))?.focus();
+  const dash = view === "dashboard";
+  $("dash").hidden = !dash;
+  $("detail").hidden = dash;
+  renderTabs();
+  if (dash) renderDashboard();
+  else renderDetail();
+  if (tabFocused) /** @type {HTMLElement | null} */ (document.querySelector(`#tabs [data-view="${view}"]`))?.focus();
 }
 
-function closeDetail() {
-  state.view = null;
-  $("detail").hidden = true;
-  $("dash").inert = false;
-  state.opener?.focus();
-}
-
-function renderDetail() {
-  const view = state.view;
-  if (!view) return;
-  $("detail-tabs").replaceChildren(
+function renderTabs() {
+  $("tabs").replaceChildren(
     ...VIEWS.map(([id, label]) =>
       h("button", {
         type: "button",
         class: "dtab",
         "data-view": id,
-        "aria-current": id === view ? "page" : undefined,
+        "aria-current": id === state.view ? "page" : undefined,
         text: label,
       }),
     ),
   );
-  $("detail-title").textContent = VIEWS.find(([id]) => id === view)?.[1] ?? "Details";
+}
+
+function renderDetail() {
+  const view = state.view;
+  if (view === "dashboard") return;
   const body = $("detail-body");
   body.dataset.view = view;
   const views = {
@@ -677,7 +673,7 @@ function replaceWord(word, to) {
 function inspectAt(s) {
   const i = state.reading?.trace.findIndex(t => t.s === s) ?? -1;
   state.selected = i >= 0 ? i : null;
-  openDetail("reading");
+  setView("reading");
   renderDashboard();
 }
 
@@ -1213,12 +1209,9 @@ function wire() {
     if (d.resolve) {
       state.resolutions.set(d.resolve, Number(d.option));
       run();
-    } else if (d.open) openDetail(/** @type {View} */ (d.open), el);
-    else if (d.view) {
-      state.view = /** @type {View} */ (d.view);
-      renderDetail();
-      /** @type {HTMLElement | null} */ (document.querySelector(`#detail-tabs [data-view="${d.view}"]`))?.focus();
-    } else if (d.pick) {
+    } else if (d.open) setView(/** @type {View} */ (d.open));
+    else if (d.view) setView(/** @type {View} */ (d.view));
+    else if (d.pick) {
       const word = d.pick;
       if (state.picked.has(word)) state.picked.delete(word);
       else state.picked.add(word);
@@ -1227,9 +1220,8 @@ function wire() {
     } else if (d.inspect) inspectAt(Number(d.inspect));
     else if (d.i) {
       state.selected = Number(d.i);
-      if (state.view !== "reading") openDetail("reading", el);
+      if (state.view !== "reading") setView("reading");
       else renderDetail();
-      renderDashboard();
     }
   });
   /** @param {Event} e */
@@ -1240,10 +1232,6 @@ function wire() {
   };
   for (const type of ["mouseover", "focusin"]) document.addEventListener(type, hover);
   for (const type of ["mouseleave", "focusout"]) $("tape").addEventListener(type, () => lightFacet(null));
-  $("detail-close").addEventListener("click", closeDetail);
-  document.addEventListener("keydown", e => {
-    if (e.key === "Escape" && state.view) closeDetail();
-  });
   $("rating").addEventListener("change", e => {
     const input = /** @type {HTMLInputElement} */ (e.target);
     if (input.name === "score") state.score = Number(input.value);
@@ -1274,6 +1262,7 @@ function wire() {
 }
 
 async function start() {
+  renderTabs();
   renderRatingForm();
   wire();
   try {

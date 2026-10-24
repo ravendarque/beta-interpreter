@@ -25,6 +25,8 @@
       <p class="sysline" id="sysline" aria-live="polite"></p>
     </header>
 
+    <nav class="tabs-main" id="tabs" aria-label="Views"></nav>
+
     <main class="dash" id="dash">
       <section class="core a-core" aria-label="Beta and scope">
         <div class="input">
@@ -105,12 +107,7 @@
       </section>
     </main>
 
-    <section class="detail" id="detail" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
-      <header class="detail-head">
-        <h2 id="detail-title" class="visually-hidden">Details</h2>
-        <nav class="detail-tabs" id="detail-tabs" aria-label="Detail views"></nav>
-        <button type="button" class="close" id="detail-close" aria-label="Close details">Close</button>
-      </header>
+    <section class="detail" id="detail" aria-label="Details" hidden>
       <div class="detail-body" id="detail-body"></div>
     </section>
 
