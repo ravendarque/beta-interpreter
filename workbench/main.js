@@ -271,6 +271,9 @@ function lightFacet(facet) {
   }
 }
 
+/** @param {import("../src/interpreter.js").Beat} b */
+const unreadText = b => state.questions?.unread.find(u => u.clause === b.clause)?.text ?? "";
+
 function renderStepsCard() {
   const r = state.reading;
   if (!r) return;
@@ -289,7 +292,9 @@ function renderStepsCard() {
           r.beats.map((b, i) =>
             h("li", { class: `${b.crux ? "crux" : ""}${b.issues.length ? " has-issue" : ""}` }, [
               h("span", { class: "n", text: String(i + 1) }),
-              h("span", { class: "say", text: say(b) }),
+              b.unread
+                ? h("span", { class: "say unread", text: `Unread: ${unreadText(b)}` })
+                : h("span", { class: "say", text: say(b) }),
             ]),
           ),
         )
@@ -305,6 +310,7 @@ function renderQuestionsCard() {
   const top = [];
   for (const a of q.ambiguous.slice(0, 2)) top.push(h("li", {}, ["Which ", h("b", { text: a.word }), "?"]));
   for (const i of q.issues.slice(0, 2)) top.push(h("li", { class: "issue", text: i }));
+  for (const u of q.unread.slice(0, 2)) top.push(h("li", { class: "issue" }, ["Unread: ", h("b", { text: u.text })]));
   for (const t of q.typos.slice(0, 3))
     top.push(h("li", {}, [h("b", { text: t.raw }), ` might be ${t.guess}`, t.count > 1 ? ` (${t.count}×)` : ""]));
   $("c-questions").replaceChildren(
@@ -480,7 +486,7 @@ function renderDetail() {
   const view = state.view;
   if (view === "dashboard") return;
   const body = $("detail-body");
-  body.dataset.view = view;
+  body.dataset.pane = view;
   const views = {
     reading: detailReading,
     questions: detailQuestions,
@@ -546,6 +552,19 @@ function detailQuestions() {
                 ),
               ),
             ]),
+          )
+        : [h("p", { class: "empty", text: "None." })],
+    ),
+  );
+  out.push(
+    panel(
+      `Unread steps (${q.unread.length})`,
+      q.unread.length
+        ? q.unread.map(u =>
+            h("p", {
+              class: "q",
+              text: `“${u.text}” has no words the interpreter knows. Teach them below or in the Reading tab.`,
+            }),
           )
         : [h("p", { class: "empty", text: "None." })],
     ),
@@ -798,7 +817,9 @@ function detailSteps() {
       { class: "steps" },
       r.beats.map(b =>
         h("li", { class: `step${b.crux ? " crux" : ""}` }, [
-          h("p", { class: "say", text: say(b) }),
+          b.unread
+            ? h("p", { class: "say unread", text: `Not read: “${unreadText(b)}”. Teach its words in the Reading tab.` })
+            : h("p", { class: "say", text: say(b) }),
           h("div", { class: "order" }, [
             who(b) ? h("span", { class: "pill f-limb", text: who(b) }) : "",
             ...b.order.map(p =>

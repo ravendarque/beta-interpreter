@@ -18,6 +18,15 @@ export function groupQuestions(reading) {
   const typos = all.filter(w => w.guess);
   const unknown = all.filter(w => !w.guess);
   const issues = reading.beats.flatMap(b => b.issues);
+  const unread = reading.beats
+    .filter(b => b.unread)
+    .map(b => ({
+      clause: b.clause,
+      text: reading.trace
+        .filter(t => t.clause === b.clause && t.kind !== "split")
+        .map(t => t.text)
+        .join(" "),
+    }));
   return {
     ambiguous: reading.amb,
     issues,
@@ -25,6 +34,7 @@ export function groupQuestions(reading) {
     unknown,
     words: all,
     fuzzy: reading.fuzzy,
-    total: reading.amb.length + issues.length + typos.length,
+    unread,
+    total: reading.amb.length + issues.length + typos.length + unread.length,
   };
 }

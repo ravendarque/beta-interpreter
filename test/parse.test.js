@@ -21,7 +21,7 @@ describe("parse", () => {
   it("does not read object property names as vocabulary", () => {
     const r = parse("constructor toString hasOwnProperty");
     expect(r.unknown.map(u => u.raw)).toEqual(["constructor", "toString", "hasOwnProperty"]);
-    expect(r.beats).toEqual([]);
+    expect(r.beats.map(b => b.unread)).toEqual([true]);
   });
 
   it("splits on 'and' before a transition", () => {
@@ -52,7 +52,7 @@ describe("parse", () => {
   });
 
   it("keeps a word with a curly apostrophe together", () => {
-    expect(parse("I don’t think it’s hard").unknown.map(u => u.raw)).toEqual(["don’t", "think"]);
+    expect(parse("I don’t think it’s hard").unknown.map(u => u.raw)).toEqual(["don’t", "think", "hard"]);
   });
 
   it("only suggests a correction that is plausibly a typo", () => {
@@ -60,6 +60,18 @@ describe("parse", () => {
     expect(guesses).toEqual([
       ["did", undefined],
       ["hok", "hook"],
+    ]);
+  });
+
+  it("marks the crux only when the beta says crux", () => {
+    expect(parse("heel hook, crux! then dyno to the jug!").beats.map(b => b.crux)).toEqual([true, false]);
+  });
+
+  it("reads plural limbs as both sides", () => {
+    expect(parse("hands on the jug, feet on the edge, knees on the rail").beats.map(b => b.side)).toEqual([
+      "both",
+      "both",
+      "both",
     ]);
   });
 

@@ -134,6 +134,7 @@ export function toMovements(reading) {
     steps.push(i);
     crux ||= beat.crux;
     issues.push(...beat.issues);
+    if (beat.unread) return;
     /** @type {Placement} */
     const stated = { keys: keysFor(beat.side, beat.part), side: "stated" };
     const closing = closes(beat);

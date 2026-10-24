@@ -829,6 +829,11 @@ textarea:focus-visible {
   color: var(--muted);
 }
 
+.say.unread {
+  color: var(--warn);
+  font-style: italic;
+}
+
 .step-list .say {
   white-space: nowrap;
   overflow: hidden;

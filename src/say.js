@@ -4,13 +4,15 @@
 const art = w => (/^[aeiou]/i.test(w) ? "an" : "a");
 /** @type {Record<string, string>} */
 const ROLE = { start: "from", target: "to", on: "on" };
+/** @type {Record<string, string>} */
+const PLURAL = { foot: "feet" };
 /** @param {string} s */
 const cap = s => s[0].toUpperCase() + s.slice(1);
 
 /** @param {Beat} b */
 export function who(b) {
   const part = b.part;
-  if (b.side === "both") return part ? `Both ${part}s` : "Both";
+  if (b.side === "both") return part ? `Both ${PLURAL[part] ?? `${part}s`}` : "Both";
   if (b.side && part) return `${cap(b.side)} ${part}`;
   if (b.side) return cap(b.side);
   return "";

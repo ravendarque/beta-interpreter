@@ -35,18 +35,21 @@
       "part": "hand"
     },
     "hands": {
+      "side": "both",
       "part": "hand"
     },
     "foot": {
       "part": "foot"
     },
     "feet": {
+      "side": "both",
       "part": "foot"
     },
     "knee": {
       "part": "leg"
     },
     "knees": {
+      "side": "both",
       "part": "leg"
     },
     "double": {
@@ -65,7 +68,7 @@
     "using": "on",
     "with": "on"
   },
-  "crux": ["crux", "hard", "hardest"],
+  "crux": ["crux"],
   "stop": [
     "a",
     "an",

@@ -7,8 +7,8 @@
 const WEIGHT = { stated: 1, implied: 1, inferred: 0.5 };
 
 /**
- * Scores each fact in the record: stated or implied 1, inferred ½, and an unplaced limb, an unresolved
- * ambiguity or a contradiction 0.
+ * Scores each fact in the record: stated or implied 1, inferred ½, and an unplaced limb, an unread step, an
+ * unresolved ambiguity or a contradiction 0.
  * @param {Reading} reading @param {MovementRecord} record
  */
 export function confidence(reading, record) {
@@ -30,6 +30,7 @@ export function confidence(reading, record) {
     }
     if (m.transition?.limbs.length) add(m.transition.side);
   }
+  for (const b of reading.beats) if (b.unread) add(null);
   for (const _ of reading.amb) add(null);
   for (const b of reading.beats) for (const _ of b.issues) add(null);
   return { score: facts ? score / facts : null, facts };

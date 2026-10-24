@@ -11,7 +11,12 @@ describe("groupQuestions", () => {
       ["frankly", 1],
     ]);
     expect(q.words.map(w => w.word)).toEqual(["honestly", "hok", "frankly"]);
-    expect(q.total).toBe(1);
+    expect([q.unread.length, q.total]).toEqual([4, 5]);
+  });
+
+  it("lists steps it could not read, with their words", () => {
+    const q = groupQuestions(parse("left hand on the jug. Explode upwards, then dyno to the lip"));
+    expect([q.unread, q.total]).toEqual([[{ clause: 1, text: "Explode upwards" }], 1]);
   });
 
   it("counts ambiguities and contradictions as open questions", () => {

@@ -33,6 +33,7 @@
  *   crux: boolean,
  *   issues: string[],
  *   clause: number,
+ *   unread?: boolean,
  * }} Beat
  * @typedef {{ s: number, e: number, facet: string, term?: Term, ambiguous?: boolean, fuzzy?: boolean }} Span
  * @typedef {{ occ: string, word: string, options: Term[], s: number }} Ambiguity
@@ -161,14 +162,14 @@ export function createInterpreter({ terms, words }) {
    * @returns {Reading}
    */
   function parse(text, { resolutions = new Map(), ignored = new Set() } = {}) {
-    /** @type {{ raw: string, n: string, s: number, e: number, sep: boolean, bang: boolean, fz?: string, guess?: string }[]} */
+    /** @type {{ raw: string, n: string, s: number, e: number, sep: boolean, fz?: string, guess?: string }[]} */
     const toks = [];
     for (const m of text.matchAll(/[\p{L}\p{N}'’ʼ]+|[.;!,:\n—–]|->|→/gu)) {
       const raw = m[0];
       const n = norm(raw);
       const s = m.index ?? 0;
       /** @type {(typeof toks)[number]} */
-      const tok = { raw, n, s, e: s + raw.length, sep: !n || splitAlways.has(n), bang: raw === "!" };
+      const tok = { raw, n, s, e: s + raw.length, sep: !n || splitAlways.has(n) };
       if (!tok.sep && !known(n) && !ignored.has(n)) {
         const near = n.length >= 3 ? nearest(n) : null;
         if (near && ((n.length >= 5 && near.d === 1) || (n.length >= 8 && near.d === 2))) {
@@ -195,13 +196,11 @@ export function createInterpreter({ terms, words }) {
       }
     });
 
-    /** @type {((typeof toks)[number][] & { bang?: boolean })[]} */
+    /** @type {(typeof toks)[number][][]} */
     const clauses = [[]];
     for (const tok of toks) {
-      if (tok.sep) {
-        if (tok.bang) clauses[clauses.length - 1].bang = true;
-        clauses.push([]);
-      } else clauses[clauses.length - 1].push(tok);
+      if (tok.sep) clauses.push([]);
+      else clauses[clauses.length - 1].push(tok);
     }
 
     /** @type {Reading} */
@@ -268,7 +267,7 @@ export function createInterpreter({ terms, words }) {
         pos: [],
         holds: [],
         order: [],
-        crux: !!clause.bang,
+        crux: false,
         clause: ci,
         issues: [],
       };
@@ -367,7 +366,12 @@ export function createInterpreter({ terms, words }) {
       for (const h of beat.holds) h.role ||= beat.moves.length ? "target" : "on";
       if (!beat.part && beat.pos.length) beat.part = beat.pos[0].part ?? null;
       if (!beat.part && beat.moves.some(m => m.region === "upper")) beat.part = "hand";
-      if (!beat.moves.length && !beat.pos.length && !beat.side) {
+      if (!beat.moves.length && !beat.pos.length && !beat.side && !beat.part) {
+        if (items.some(m => m.kind === "unknown")) {
+          beat.unread = true;
+          out.beats.push(beat);
+          continue;
+        }
         for (const h of beat.holds) for (const k of h.kinds) if (!out.features.includes(k)) out.features.push(k);
         if (beat.crux && out.beats.length) out.beats[out.beats.length - 1].crux = true;
         continue;
