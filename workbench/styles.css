@@ -589,7 +589,7 @@ button.tok:hover,
 /* Core: scope and input */
 .core {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 10px;
   min-block-size: 0;
 }
@@ -806,10 +806,6 @@ button.tok:hover,
 .input {
   display: grid;
   gap: 6px;
-  padding: 10px 12px;
-  border: 1px solid var(--rule-hi);
-  background: var(--panel);
-  box-shadow: 0 0 24px -8px var(--glow);
 }
 
 .input-label {
