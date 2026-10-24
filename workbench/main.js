@@ -4,7 +4,8 @@ import { say, who } from "../src/say.js";
 import { $, h } from "./dom.js";
 import { groupQuestions } from "./questions.js";
 import { METRICS, TAGS } from "./ratings.js";
-import { renderScope } from "./scope.js";
+import { confidence } from "./confidence.js";
+import { drawLinks, renderGauge } from "./gauge.js";
 
 /**
  * @typedef {import("../src/interpreter.js").Term} Term
@@ -61,7 +62,6 @@ const state = {
   /** @type {number | null} */ score: null,
   /** @type {Set<string>} */ tags: new Set(),
   corrections: 0,
-  parseMs: 0,
   /** @type {string[]} */ log: [],
   /** @type {{ sha: string, diff: string, changed: number } | null} */ status: null,
   /** @type {{ score: number, tags: string[] }[]} */ ratings: [],
@@ -158,10 +158,8 @@ function metrics() {
 
 function run() {
   if (!state.interpreter) return;
-  const t0 = performance.now();
   const reading = state.interpreter.parse(beta.value, { resolutions: state.resolutions, ignored: state.ignored });
   state.record = toMovements(reading);
-  state.parseMs = performance.now() - t0;
   state.reading = reading;
   state.questions = groupQuestions(reading);
   if (state.selected !== null && !reading.trace[state.selected]) state.selected = null;
@@ -182,6 +180,7 @@ function renderDashboard() {
   renderVocabCard();
   renderRatingHistory();
   renderTape();
+  linkCards();
 }
 
 function renderSysline() {
@@ -203,30 +202,37 @@ function renderSysline() {
 function renderCore() {
   const r = state.reading;
   const rec = state.record;
+  const q = state.questions;
   const m = metrics();
-  if (!r || !rec || !m) return;
-  renderScope(/** @type {SVGSVGElement} */ (/** @type {unknown} */ ($("scope"))), {
-    tokens: r.trace.map((t, i) => ({ i, kind: t.kind, facet: facetOfTrace(t), clause: t.clause, text: t.text })),
-    steps: r.beats.map(b => ({ clause: b.clause, crux: b.crux })),
-    movements: rec.movements.map(mv => ({ clauses: mv.steps.map(i => r.beats[i].clause), crux: mv.crux })),
-    coverage: m.recognised,
-    parseMs: state.parseMs,
-    selected: state.selected,
+  if (!r || !rec || !q || !m) return;
+  renderGauge(/** @type {SVGSVGElement} */ (/** @type {unknown} */ ($("gauge"))), {
+    recognised: m.tokens ? m.recognised : null,
+    confidence: confidence(r, rec).score,
   });
-  const open = (state.questions?.total ?? 0) + (state.questions?.unknown.length ?? 0);
-  /** @type {[string, string, string?][]} */
-  const items = [
-    ["Tokens", String(m.tokens)],
-    ["Steps", String(m.steps)],
-    ["Movements", String(m.movements)],
-    ["Inferred", String(m.inferred)],
-    ["Unplaced", String(m.unplaced), m.unplaced ? "warn" : ""],
-    ["Open", String(open), open ? "warn" : ""],
+  const lines = (state.status?.diff ?? "").split("\n");
+  const changes = lines.filter(l => /^[+-](?![+-]{2})/.test(l)).length;
+  const questions = q.total + q.unknown.length;
+  /** @type {[string, number, boolean][]} */
+  const stats = [
+    ["s-movements", m.movements, false],
+    ["s-steps", m.steps, false],
+    ["s-tokens", m.tokens, false],
+    ["s-questions", questions, questions > 0],
+    ["s-vocab", changes, changes > 0],
   ];
-  $("readouts").replaceChildren(
-    ...items.map(([label, value, cls]) =>
-      h("div", { class: `readout ${cls ?? ""}` }, [h("dt", { text: label }), h("dd", { text: value })]),
-    ),
+  for (const [id, value, warn] of stats) {
+    const el = $(id);
+    el.textContent = String(value);
+    el.parentElement?.classList.toggle("warn", warn);
+  }
+}
+
+function linkCards() {
+  if (state.view !== "dashboard") return;
+  drawLinks(
+    $("dash"),
+    /** @type {SVGSVGElement} */ (/** @type {unknown} */ ($("links"))),
+    /** @type {SVGSVGElement} */ (/** @type {unknown} */ ($("gauge"))),
   );
 }
 
@@ -1263,6 +1269,7 @@ function wire() {
 
 async function start() {
   renderTabs();
+  new ResizeObserver(linkCards).observe($("dash"));
   renderRatingForm();
   wire();
   try {

@@ -28,7 +28,7 @@
     <nav class="tabs-main" id="tabs" aria-label="Views"></nav>
 
     <main class="dash" id="dash">
-      <section class="core a-core" aria-label="Beta and scope">
+      <section class="core a-core" aria-label="Beta and gauge">
         <div class="input">
           <label for="beta" class="input-label">
             <span>Beta</span>
@@ -36,12 +36,50 @@
           </label>
           <textarea id="beta" spellcheck="false" autocomplete="off" rows="4" placeholder="Paste or type a beta"></textarea>
         </div>
-        <div class="scope-wrap">
-          <svg class="scope" id="scope" viewBox="0 0 400 400" role="img" aria-labelledby="scope-title">
-            <title id="scope-title">Scope: each token as an arc, coloured by how it was read</title>
+        <div class="radial">
+          <div class="stats stats-left">
+            <button type="button" class="stat" data-open="movements" data-link="a-movements">
+              <span class="v" id="s-movements"></span><span class="l">Movements</span>
+            </button>
+            <button type="button" class="stat" data-open="steps" data-link="a-steps">
+              <span class="v" id="s-steps"></span><span class="l">Steps</span>
+            </button>
+            <button type="button" class="stat" data-open="reading" data-link="a-trace">
+              <span class="v" id="s-tokens"></span><span class="l">Tokens</span>
+            </button>
+          </div>
+          <svg class="gauge" id="gauge" viewBox="0 0 200 200" role="img" aria-labelledby="gauge-title">
+            <title id="gauge-title">Recognised words and confidence in the reading</title>
           </svg>
-          <dl class="readouts" id="readouts"></dl>
+          <div class="stats stats-right">
+            <button type="button" class="stat" data-open="questions" data-link="a-questions">
+              <span class="v" id="s-questions"></span><span class="l">Questions</span>
+            </button>
+            <button type="button" class="stat" data-open="vocabulary" data-link="a-vocab">
+              <span class="v" id="s-vocab"></span><span class="l">Vocabulary changes</span>
+            </button>
+          </div>
         </div>
+        <form class="card a-rate rate-card" id="rating" aria-labelledby="t-rate">
+          <header class="card-head">
+            <h2 id="t-rate">Rate reading</h2>
+            <span class="figure-sm" id="rating-history"></span>
+          </header>
+          <div class="card-body rate-body">
+            <fieldset class="score">
+              <legend class="visually-hidden">Overall score</legend>
+              <div class="score-row" id="score"></div>
+            </fieldset>
+            <fieldset class="tags">
+              <legend class="visually-hidden">What went wrong</legend>
+              <div class="tag-row" id="tags"></div>
+            </fieldset>
+            <div class="rate-foot">
+              <button type="submit" class="primary" id="save-rating" disabled>Save rating</button>
+              <span class="status" id="rating-status" role="status"></span>
+            </div>
+          </div>
+        </form>
       </section>
 
       <section class="card a-movements" aria-labelledby="t-movements">
@@ -68,26 +106,6 @@
         <div class="card-body" id="c-questions"></div>
       </section>
 
-      <form class="card a-rate" id="rating" aria-labelledby="t-rate">
-        <header class="card-head">
-          <h2 id="t-rate">Rate reading</h2>
-          <span class="figure-sm" id="rating-history"></span>
-        </header>
-        <div class="card-body rate-body">
-          <fieldset class="score">
-            <legend class="visually-hidden">Overall score</legend>
-            <div class="score-row" id="score"></div>
-          </fieldset>
-          <fieldset class="tags">
-            <legend class="visually-hidden">What went wrong</legend>
-            <div class="tag-row" id="tags"></div>
-          </fieldset>
-          <div class="rate-foot">
-            <button type="submit" class="primary" id="save-rating" disabled>Save rating</button>
-            <span class="status" id="rating-status" role="status"></span>
-          </div>
-        </div>
-      </form>
 
       <section class="card a-vocab" aria-labelledby="t-vocab">
         <header class="card-head">
@@ -105,6 +123,7 @@
         </header>
         <div class="tape-wrap"><ol class="tape" id="tape" aria-label="Token trace"></ol></div>
       </section>
+      <svg class="links" id="links" aria-hidden="true"></svg>
     </main>
 
     <section class="detail" id="detail" aria-label="Details" hidden>
