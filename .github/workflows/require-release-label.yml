@@ -1,0 +1,50 @@
+name: Require release label
+
+# Every PR needs exactly one release label. "release: none" is only for changes that never reach consumers of the
+# package, so every changed file must be on the allowlist below.
+on:
+  pull_request:
+    types: [opened, reopened, edited, labeled, unlabeled, synchronize, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  check-label:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the release label
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          labels=$(gh pr view "$PR" --repo "$REPO" --json labels --jq '.labels[].name' | grep -E '^release: ' || true)
+          count=$(printf '%s' "$labels" | grep -c . || true)
+          if [ "$count" != "1" ]; then
+            echo "::error::Apply exactly one of 'release: major', 'release: minor', 'release: patch' or 'release: none'."
+            exit 1
+          fi
+          echo "Release label: $labels"
+          [ "$labels" = "release: none" ] || exit 0
+          files=$(gh api --paginate "repos/$REPO/pulls/$PR/files" --jq '.[] | .filename, (.previous_filename // empty)')
+          offending=""
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            case "$f" in
+              workbench/*|test/*|scripts/*|prototype/*|docs/*|.github/*|.claude/*) continue ;;
+              .gitignore|biome.json|tsconfig.json|vite.config.js|vitest.config.js|pnpm-workspace.yaml) continue ;;
+            esac
+            case "$f" in
+              */*) ;;
+              *.md) continue ;;
+            esac
+            offending="$offending$f"$'\n'
+          done <<< "$files"
+          if [ -n "$offending" ]; then
+            echo "::error::'release: none' is only for changes that never reach the package. These files do, so this PR needs a real release label:"
+            printf '%s' "$offending"
+            exit 1
+          fi

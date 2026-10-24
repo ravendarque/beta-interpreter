@@ -1,0 +1,78 @@
+name: Release
+
+# When a PR with a release label merges, tag the merge commit with the next version, create a GitHub Release with
+# the packed package attached, and publish it to GitHub Packages. Nothing is committed: the version is written into
+# package.json only inside this job's checkout, for the artefact.
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Version bump
+        required: true
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha || 'main' }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Work out the version
+        id: version
+        env:
+          PR_LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+          BUMP: ${{ inputs.bump }}
+        run: echo "version=$(node scripts/next-version.mjs)" >> "$GITHUB_OUTPUT"
+
+      - uses: ./.github/actions/setup-node-pnpm
+        if: steps.version.outputs.version != ''
+
+      - name: Test, build the types and pack
+        if: steps.version.outputs.version != ''
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          pnpm test
+          pnpm build:types
+          npm pkg set version="${VERSION#v}"
+          pnpm pack --pack-destination "$RUNNER_TEMP/pack"
+
+      - name: Tag and create the release
+        if: steps.version.outputs.version != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$VERSION" -m "$VERSION"
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$VERSION"
+          gh release create "$VERSION" --repo "$GITHUB_REPOSITORY" --title "$VERSION" --generate-notes "$RUNNER_TEMP"/pack/*.tgz
+
+      - name: Publish to GitHub Packages
+        if: steps.version.outputs.version != ''
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
+        run: |
+          printf '//npm.pkg.github.com/:_authToken=%s\n' "$NODE_AUTH_TOKEN" > "$RUNNER_TEMP/.npmrc"
+          npm publish "$RUNNER_TEMP"/pack/*.tgz --userconfig "$RUNNER_TEMP/.npmrc"
