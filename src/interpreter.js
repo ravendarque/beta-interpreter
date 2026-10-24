@@ -16,12 +16,14 @@
  *   limbs: Record<string, Limb>,
  *   prepositions: Record<string, string>,
  *   crux: string[],
- *   stop: string[],
+ *   handMoves: string[],
+ *   qualifiers: string[],
+ *   filler: string[],
  *   splitAlways: string[],
  *   splitBeforeMove: string[],
  * }} Words
  * @typedef {{ terms: Term[], words: Words }} Vocabulary
- * @typedef {{ role: string | null, ori: Term | null, kinds: Term[] }} Hold
+ * @typedef {{ role: string | null, ori: Term | null, kinds: Term[], qualifiers: string[] }} Hold
  * @typedef {{ kind: "hold", hold: Hold } | { kind: "position", term: Term, role: string | null } | { kind: "transition", term: Term }} Part
  * @typedef {{
  *   side: string | null,
@@ -33,6 +35,8 @@
  *   crux: boolean,
  *   issues: string[],
  *   clause: number,
+ *   handMove?: boolean,
+ *   qualifiers: string[],
  *   unread?: boolean,
  * }} Beat
  * @typedef {{ s: number, e: number, facet: string, term?: Term, ambiguous?: boolean, fuzzy?: boolean }} Span
@@ -56,7 +60,8 @@
  *   | { kind: "term", key: string, senses: Term[], fz: string[] }
  *   | { kind: "limb", side?: string, part?: string }
  *   | { kind: "prep", role: string }
- *   | { kind: "crux" | "break" | "stop" }
+ *   | { kind: "crux" | "break" | "filler" | "handmove" }
+ *   | { kind: "qualifier", word: string }
  *   | { kind: "unknown", raw: string, guess?: string }
  * )} Item
  */
@@ -102,7 +107,9 @@ export function createInterpreter({ terms, words }) {
   const limbs = new Map(Object.entries(words.limbs));
   const preps = new Map(Object.entries(words.prepositions));
   const crux = new Set(words.crux);
-  const stop = new Set(words.stop);
+  const handMoves = new Set(words.handMoves);
+  const qualifiers = new Set(words.qualifiers);
+  const filler = new Set(words.filler);
   const splitAlways = new Set(words.splitAlways);
   const splitBeforeMove = new Set(words.splitBeforeMove);
 
@@ -144,14 +151,17 @@ export function createInterpreter({ terms, words }) {
   const known = w =>
     limbs.has(w) ||
     preps.has(w) ||
-    stop.has(w) ||
+    filler.has(w) ||
     crux.has(w) ||
+    handMoves.has(w) ||
+    qualifiers.has(w) ||
     splitBeforeMove.has(w) ||
     vocabWords.includes(w) ||
     !!lookup(w);
 
   /** @param {string} key @param {string | null} named */
   const startsStep = (key, named) =>
+    handMoves.has(key) ||
     (lookup(key)?.senses ?? []).some(
       s => facetOf(s) === "transition" || (facetOf(s) === "position" && !fits(named, s.part)),
     );
@@ -189,8 +199,10 @@ export function createInterpreter({ terms, words }) {
       }
       named = limbs.get(tok.n)?.part ?? named;
       if (!splitBeforeMove.has(tok.n)) return;
-      const next = toks[i + 1]?.n;
-      if (next && (startsStep(next, named) || startsStep(`${next} ${toks[i + 2]?.n}`, named))) {
+      let ahead = false;
+      for (let j = i + 1; j < toks.length && !toks[j].sep && !splitBeforeMove.has(toks[j].n) && !ahead; j++)
+        ahead = startsStep(toks[j].n, named) || startsStep(`${toks[j].n} ${toks[j + 1]?.n}`, named);
+      if (ahead) {
         tok.sep = true;
         named = null;
       }
@@ -240,11 +252,15 @@ export function createInterpreter({ terms, words }) {
               ? { kind: "prep", role, ...at }
               : crux.has(w)
                 ? { kind: "crux", ...at }
-                : splitBeforeMove.has(w)
-                  ? { kind: "break", ...at }
-                  : stop.has(w) || ignored.has(w)
-                    ? { kind: "stop", ...at }
-                    : { kind: "unknown", raw: tok.raw, guess: tok.guess, ...at };
+                : handMoves.has(w)
+                  ? { kind: "handmove", ...at }
+                  : qualifiers.has(w)
+                    ? { kind: "qualifier", word: w, ...at }
+                    : splitBeforeMove.has(w)
+                      ? { kind: "break", ...at }
+                      : filler.has(w) || ignored.has(w)
+                        ? { kind: "filler", ...at }
+                        : { kind: "unknown", raw: tok.raw, guess: tok.guess, ...at };
         }
         items.push(m);
         out.trace.push({
@@ -270,12 +286,14 @@ export function createInterpreter({ terms, words }) {
         crux: false,
         clause: ci,
         issues: [],
+        qualifiers: [],
       };
       for (const m of items)
         if (m.kind === "limb") {
           beat.side = m.side || beat.side;
           beat.part = m.part || beat.part;
-        }
+        } else if (m.kind === "handmove") beat.handMove = true;
+      if (beat.handMove && !beat.part) beat.part = "hand";
       /** @type {string | null} */
       let role = null;
       /** @type {Term | null} */
@@ -283,6 +301,8 @@ export function createInterpreter({ terms, words }) {
       /** @type {Hold | null} */
       let last = null;
       let rockRun = false;
+      /** @type {string[]} */
+      let pendingQ = [];
       for (const m of items) {
         if (m.kind === "limb") {
           out.spans.push({ s: m.s, e: m.e, facet: "limb" });
@@ -295,6 +315,14 @@ export function createInterpreter({ terms, words }) {
         }
         if (m.kind === "crux") {
           beat.crux = true;
+          continue;
+        }
+        if (m.kind === "handmove") {
+          rockRun = false;
+          continue;
+        }
+        if (m.kind === "qualifier") {
+          pendingQ.push(m.word);
           continue;
         }
         if (m.kind === "break") {
@@ -336,17 +364,22 @@ export function createInterpreter({ terms, words }) {
           continue;
         }
         if (facet === "hold" || facet === "feature") {
-          if (rockRun && last) last.kinds.push(term);
-          else {
-            last = { role, ori: pendingOri, kinds: [term] };
+          if (rockRun && last) {
+            last.kinds.push(term);
+            last.qualifiers.push(...pendingQ);
+          } else {
+            last = { role, ori: pendingOri, kinds: [term], qualifiers: pendingQ };
             beat.holds.push(last);
             beat.order.push({ kind: "hold", hold: last });
             pendingOri = null;
           }
+          pendingQ = [];
           rockRun = true;
           continue;
         }
         rockRun = false;
+        beat.qualifiers.push(...pendingQ);
+        pendingQ = [];
         if (beat.pos.includes(term) || beat.moves.includes(term)) continue;
         if (facet === "position") {
           beat.pos.push(term);
@@ -359,11 +392,13 @@ export function createInterpreter({ terms, words }) {
         }
       }
       if (pendingOri) {
-        const hold = { role, ori: pendingOri, kinds: [] };
+        const hold = { role, ori: pendingOri, kinds: [], qualifiers: pendingQ };
+        pendingQ = [];
         beat.holds.push(hold);
         beat.order.push({ kind: "hold", hold });
       }
-      for (const h of beat.holds) h.role ||= beat.moves.length ? "target" : "on";
+      beat.qualifiers.push(...pendingQ);
+      for (const h of beat.holds) h.role ||= beat.moves.length || beat.handMove ? "target" : "on";
       if (!beat.part && beat.pos.length) beat.part = beat.pos[0].part ?? null;
       if (!beat.part && beat.moves.some(m => m.region === "upper")) beat.part = "hand";
       if (!beat.moves.length && !beat.pos.length && !beat.side && !beat.part) {

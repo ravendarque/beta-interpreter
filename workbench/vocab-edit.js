@@ -39,17 +39,17 @@ export function removePhrase(terms, id, phrase) {
 export const movePhrase = (terms, fromId, toId, phrase) => addPhrase(removePhrase(terms, fromId, phrase), toId, phrase);
 
 /** @param {Words} words @param {string} word @param {Term[]} [terms] @returns {Words} */
-export function addStopWord(words, word, terms = []) {
+export function addFillerWord(words, word, terms = []) {
   const k = key(word);
-  if (k.includes(" ")) throw new Error("A stop word is a single word.");
-  if (words.stop.includes(k)) throw new Error(`“${k}” is already a stop word.`);
+  if (k.includes(" ")) throw new Error("A filler word is a single word.");
+  if (words.filler.includes(k)) throw new Error(`“${k}” is already a filler word.`);
   const used = owners(terms, k);
   if (used.length) throw new Error(`“${k}” is a vocabulary phrase (${used.map(t => t.name).join(", ")}).`);
-  return { ...words, stop: [...words.stop, k] };
+  return { ...words, filler: [...words.filler, k] };
 }
 
 /** @param {Words} words @param {string[]} list @param {Term[]} [terms] */
-export function addStopWords(words, list, terms = []) {
+export function addFillerWords(words, list, terms = []) {
   let next = words;
   /** @type {string[]} */
   const added = [];
@@ -57,8 +57,8 @@ export function addStopWords(words, list, terms = []) {
   const skipped = [];
   for (const word of list)
     try {
-      next = addStopWord(next, word, terms);
-      added.push(next.stop[next.stop.length - 1]);
+      next = addFillerWord(next, word, terms);
+      added.push(next.filler[next.filler.length - 1]);
     } catch (e) {
       skipped.push({ word: norm(word) || word, reason: e instanceof Error ? e.message : String(e) });
     }

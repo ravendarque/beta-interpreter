@@ -29,7 +29,18 @@ const VIEWS = [
   ["json", "JSON"],
   ["vocabulary", "Vocabulary"],
 ];
-const SPECTRUM = ["terrain", "feature", "hold", "orientation", "position", "transition", "limb", "stop", "unknown"];
+const SPECTRUM = [
+  "terrain",
+  "feature",
+  "hold",
+  "orientation",
+  "qualifier",
+  "position",
+  "transition",
+  "limb",
+  "filler",
+  "unknown",
+];
 /** @type {Record<string, string>} */
 const KIND_LABEL = {
   term: "term",
@@ -37,7 +48,9 @@ const KIND_LABEL = {
   prep: "role",
   crux: "crux",
   break: "join",
-  stop: "stop",
+  handmove: "hand move",
+  qualifier: "qualifier",
+  filler: "filler",
   unknown: "unknown",
   split: "split",
 };
@@ -126,12 +139,15 @@ const spanOf = t => state.reading?.spans.find(sp => sp.s === t.s && sp.term);
 function facetOfTrace(t) {
   if (t.kind === "term") return spanOf(t)?.facet ?? "term";
   if (t.kind === "prep" || t.kind === "crux") return "limb";
-  if (t.kind === "break") return "stop";
+  if (t.kind === "break") return "filler";
+  if (t.kind === "handmove") return "transition";
   return t.kind;
 }
 /** @param {import("../src/interpreter.js").Hold | null} hold */
 const holdText = hold =>
-  hold ? [hold.ori, ...hold.kinds].flatMap(t => (t ? [t.name.toLowerCase()] : [])).join(" ") : "";
+  hold
+    ? [...hold.qualifiers, ...[hold.ori, ...hold.kinds].flatMap(t => (t ? [t.name.toLowerCase()] : []))].join(" ")
+    : "";
 
 function metrics() {
   const r = state.reading;
@@ -259,7 +275,7 @@ function renderSpectrum() {
 /** @param {Trace} t */
 function legendKey(t) {
   const f = facetOfTrace(t);
-  return SPECTRUM.includes(f) ? f : "stop";
+  return SPECTRUM.includes(f) ? f : "filler";
 }
 
 /** @param {string | null} facet */
@@ -431,7 +447,7 @@ function readback() {
     if (t.s > at) frag.append(text.slice(at, t.s));
     at = t.e;
     const sel = state.selected === i ? " sel" : "";
-    if (t.kind === "split" || t.kind === "stop" || t.kind === "break") {
+    if (t.kind === "split" || t.kind === "filler" || t.kind === "break") {
       frag.append(h("span", { class: `tok k-${t.kind}${sel}`, text: t.text }));
       return;
     }
@@ -517,7 +533,7 @@ function detailReading() {
 
 function legend() {
   return h("div", { class: "legend" }, [
-    ...["terrain", "feature", "hold", "orientation", "position", "transition", "limb"].map(f =>
+    ...["terrain", "feature", "hold", "orientation", "qualifier", "position", "transition", "limb"].map(f =>
       h("span", { class: `key-chip f-${f}`, text: f }),
     ),
     h("span", { class: "key-chip k-unknown", text: "unknown" }),
@@ -622,12 +638,12 @@ function detailQuestions() {
     text: picked.length ? `Mark ${picked.length} as filler` : "Mark as filler",
   });
   filler.addEventListener("click", () =>
-    correct("/api/vocabulary/stop", { words: picked }, result => {
+    correct("/api/vocabulary/filler", { words: picked }, result => {
       state.picked.clear();
       const skipped = result.skipped?.length
         ? ` Skipped ${result.skipped.map((/** @type {{word: string}} */ x) => x.word).join(", ")}.`
         : "";
-      return `Added ${result.added.length} stop word${result.added.length === 1 ? "" : "s"}.${skipped}`;
+      return `Added ${result.added.length} filler word${result.added.length === 1 ? "" : "s"}.${skipped}`;
     }),
   );
   const ignore = h("button", {
@@ -665,7 +681,7 @@ function detailQuestions() {
         ? [
             h("p", {
               class: "note",
-              text: "Select words that carry no meaning for the record, then mark them as filler. Filler becomes stop words in vocabulary/words.json.",
+              text: "Select words that carry no meaning for the record, then mark them as filler. Filler becomes filler words in vocabulary/words.json.",
             }),
             cloud,
             h("div", { class: "bulk" }, [filler, ignore, teach, all]),
@@ -1140,16 +1156,16 @@ function inspector() {
       use.addEventListener("click", () => replaceWord(norm(t.text), guess));
       row.append(use);
     }
-    const stop = h("button", { type: "button", class: "ghost", text: "Filler: add as a stop word" });
-    stop.addEventListener("click", () =>
-      correct("/api/vocabulary/stop", { words: [t.text] }, () => `“${norm(t.text)}” is now a stop word.`),
+    const filler = h("button", { type: "button", class: "ghost", text: "Mark as filler" });
+    filler.addEventListener("click", () =>
+      correct("/api/vocabulary/filler", { words: [t.text] }, () => `“${norm(t.text)}” is now a filler word.`),
     );
     const ignore = h("button", { type: "button", class: "ghost", text: "Ignore in this session" });
     ignore.addEventListener("click", () => {
       state.ignored.add(norm(t.text));
       run();
     });
-    row.append(stop, ignore);
+    row.append(filler, ignore);
     kids.push(
       h("div", { class: "insp-actions" }, [
         h("p", { class: "state-label", text: "This means…" }),
@@ -1170,10 +1186,12 @@ function inspector() {
     /** @type {Record<string, string>} */
     const explain = {
       limb: "A limb word. It sets the side or part for its step.",
+      handmove: "A hand move with no named technique. The holds after it are where the hand goes.",
+      qualifier: "A qualifier. It describes the hold that follows it.",
       prep: `A role word. Holds after it are read as “${t.text}” holds until the next role word.`,
       crux: "Marks this step as the crux.",
       break: "Joins two things in one step, unless a move or a conflicting position follows, which starts a new step.",
-      stop: "A stop word. It carries no meaning for the record.",
+      filler: "A filler word. It carries no meaning for the record.",
       split: "A step break.",
     };
     kids.push(h("p", { class: "note", text: explain[t.kind] ?? "" }));

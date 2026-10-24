@@ -448,7 +448,7 @@
       "facets": ["position"],
       "region": "lower",
       "part": "foot",
-      "match": []
+      "match": ["sit"]
     },
     {
       "id": "toe-sit",
@@ -723,6 +723,13 @@
       "facets": ["transition"],
       "region": "lower",
       "match": ["footswap", "foot swap"]
+    },
+    {
+      "id": "stand-up",
+      "name": "Stand up",
+      "facets": ["transition"],
+      "region": "lower",
+      "match": ["stand up", "stand"]
     },
     {
       "id": "rockover",

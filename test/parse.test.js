@@ -36,7 +36,7 @@ describe("parse", () => {
     expect(parse("lh on the sloppr jugg, then fire up").trace.map(t => [t.text, t.kind, t.key ?? null])).toEqual([
       ["lh", "limb", null],
       ["on", "prep", null],
-      ["the", "stop", null],
+      ["the", "filler", null],
       ["sloppr", "term", "sloper"],
       ["jugg", "unknown", null],
       [",", "split", null],
@@ -73,6 +73,34 @@ describe("parse", () => {
       "both",
       "both",
     ]);
+  });
+
+  it("reads reach, catch and grab as an unnamed hand move", () => {
+    const r = parse("reach the jug, catch the sloper, grab the crimp");
+    expect(r.beats.map(b => [b.part, b.handMove, b.holds[0].role])).toEqual([
+      ["hand", true, "target"],
+      ["hand", true, "target"],
+      ["hand", true, "target"],
+    ]);
+  });
+
+  it("starts a new step at 'and' when a hand move follows a named foot", () => {
+    expect(parse("stomp the left foot on the rail and push hard to reach the lip").beats.length).toBe(2);
+  });
+
+  it("reads stand as a transition and sit as a position", () => {
+    const r = parse("sit on the ledge, then stand up");
+    expect(r.beats.map(b => [...b.pos, ...b.moves].map(t => t.id))).toEqual([["sit"], ["stand-up"]]);
+  });
+
+  it("attaches qualifiers to the hold that follows them", () => {
+    const r = parse("feet on the small dishes, then reach the sharp shallow crimp");
+    expect(r.beats.map(b => b.holds.map(h => h.qualifiers))).toEqual([[["small"]], [["sharp", "shallow"]]]);
+    expect(r.beats.map(say)).toEqual(["Both feet: on a small dish.", "Hand move to a sharp shallow crimp."]);
+  });
+
+  it("keeps a qualifier with no hold after it on the step", () => {
+    expect(parse("massive dyno").beats[0].qualifiers).toEqual(["massive"]);
   });
 
   it("returns nothing for empty text", () => {

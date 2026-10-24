@@ -19,10 +19,11 @@
   --feature: #dcbb8c;
   --hold: #f3c66b;
   --orientation: #d6aee3;
+  --qualifier: #bcc78e;
   --position: #a8dcb6;
   --transition: #f69c90;
   --limb: #d2d3cd;
-  --stop: #4b4e48;
+  --filler: #4b4e48;
   --unknown: var(--warn);
 
   --ui: "Saira", ui-sans-serif, system-ui, sans-serif;
@@ -53,10 +54,11 @@
     --feature: #8c6431;
     --hold: #946500;
     --orientation: #7c3f94;
+    --qualifier: #5f6a26;
     --position: #2b7546;
     --transition: #ad3e33;
     --limb: #4a4c47;
-    --stop: #b9bbb5;
+    --filler: #b9bbb5;
     color-scheme: light;
   }
 }
@@ -454,16 +456,20 @@ h2 {
 .f-position {
   --c: var(--position);
 }
+.f-qualifier,
+.k-qualifier {
+  --c: var(--qualifier);
+}
 .f-transition {
   --c: var(--transition);
 }
 .f-limb {
   --c: var(--limb);
 }
-.f-stop,
-.k-stop,
+.f-filler,
+.k-filler,
 .k-break {
-  --c: var(--stop);
+  --c: var(--filler);
 }
 .k-unknown,
 .f-unknown {
@@ -491,7 +497,7 @@ button.tok:hover,
   box-shadow: 0 0 10px color-mix(in srgb, var(--c) 60%, transparent);
 }
 
-.tok.k-stop,
+.tok.k-filler,
 .tok.k-break,
 .tok.k-split {
   padding: 0;
@@ -1103,7 +1109,7 @@ fieldset {
   box-shadow: 0 0 6px color-mix(in srgb, var(--c, transparent) 50%, transparent);
 }
 
-.cell.k-stop .band,
+.cell.k-filler .band,
 .cell.k-break .band {
   opacity: 0.6;
   box-shadow: none;
@@ -1141,7 +1147,7 @@ fieldset {
   font-variation-settings: "wdth" 75;
 }
 
-.cell.k-stop .raw,
+.cell.k-filler .raw,
 .cell.k-break .raw,
 .cell.k-split .raw {
   color: var(--faint);

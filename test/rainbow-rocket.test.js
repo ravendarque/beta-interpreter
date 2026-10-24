@@ -20,6 +20,11 @@ describe("a full beta written by the maintainer", () => {
     expect(r.beats[2]).toMatchObject({ unread: true });
   });
 
+  it("gives the lip to a hand, not the left foot", () => {
+    const last = r.beats[r.beats.length - 1];
+    expect([last.part, last.holds.map(h => h.kinds.map(k => k.id))]).toEqual(["hand", [["lip"]]]);
+  });
+
   it("does not take effort words for the crux", () => {
     expect(r.beats.some(b => b.crux)).toBe(false);
   });

@@ -20,13 +20,15 @@ export function who(b) {
 
 /** @param {Hold} h */
 function holdPhrase(h) {
-  const words = [h.ori, ...h.kinds].filter(x => x !== null).map(x => x.name.toLowerCase());
+  const words = [...h.qualifiers, ...[h.ori, ...h.kinds].filter(x => x !== null).map(x => x.name.toLowerCase())];
   return words.length && h.role ? `${ROLE[h.role]} ${art(words[0])} ${words.join(" ")}` : "";
 }
 
 /** @param {Beat} b */
 export function say(b) {
-  const actions = [...b.moves, ...b.pos].map(x => x.name.toLowerCase()).join(", ");
+  const names = [...b.moves, ...b.pos].map(x => x.name.toLowerCase());
+  if (b.handMove && !b.moves.length) names.unshift("hand move");
+  const actions = names.join(", ");
   const body = [actions, ...b.holds.map(holdPhrase)].filter(Boolean).join(" ");
   const w = who(b);
   if (w) return `${w}: ${body}.`;

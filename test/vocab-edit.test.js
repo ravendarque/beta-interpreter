@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { vocabulary } from "../src/index.js";
-import { addPhrase, addStopWord, addStopWords, movePhrase, owners, removePhrase } from "../workbench/vocab-edit.js";
+import { addPhrase, addFillerWord, addFillerWords, movePhrase, owners, removePhrase } from "../workbench/vocab-edit.js";
 
 const fresh = () => structuredClone(vocabulary);
 /** @param {import("../src/interpreter.js").Term[]} terms @param {string} id */
@@ -44,24 +44,24 @@ describe("vocabulary edits", () => {
     expect(owners(fresh().terms, "jam").map(t => t.id)).toEqual(["jam-hand", "jam-wedge"]);
   });
 
-  it("adds a stop word", () => {
-    expect(addStopWord(fresh().words, "Securely").stop).toContain("securely");
+  it("adds a filler word", () => {
+    expect(addFillerWord(fresh().words, "Securely").filler).toContain("securely");
   });
 
-  it("refuses a stop word that is already a stop word, a term phrase, or more than one word", () => {
-    expect(() => addStopWord(fresh().words, "the")).toThrow("“the” is already a stop word.");
-    expect(() => addStopWord(fresh().words, "very good")).toThrow("A stop word is a single word.");
-    expect(() => addStopWord(fresh().words, "jug", fresh().terms)).toThrow("“jug” is a vocabulary phrase (Jug).");
+  it("refuses a filler word that is already a filler word, a term phrase, or more than one word", () => {
+    expect(() => addFillerWord(fresh().words, "the")).toThrow("“the” is already a filler word.");
+    expect(() => addFillerWord(fresh().words, "very good")).toThrow("A filler word is a single word.");
+    expect(() => addFillerWord(fresh().words, "jug", fresh().terms)).toThrow("“jug” is a vocabulary phrase (Jug).");
   });
 
-  it("adds several stop words at once and reports the ones it skipped", () => {
-    const r = addStopWords(fresh().words, ["Think", "the", "jug", "think", "pretty"], fresh().terms);
+  it("adds several filler words at once and reports the ones it skipped", () => {
+    const r = addFillerWords(fresh().words, ["Think", "the", "jug", "think", "pretty"], fresh().terms);
     expect(r.added).toEqual(["think", "pretty"]);
     expect(r.skipped).toEqual([
-      { word: "the", reason: "“the” is already a stop word." },
+      { word: "the", reason: "“the” is already a filler word." },
       { word: "jug", reason: "“jug” is a vocabulary phrase (Jug)." },
-      { word: "think", reason: "“think” is already a stop word." },
+      { word: "think", reason: "“think” is already a filler word." },
     ]);
-    expect(r.words.stop.slice(-2)).toEqual(["think", "pretty"]);
+    expect(r.words.filler.slice(-2)).toEqual(["think", "pretty"]);
   });
 });
