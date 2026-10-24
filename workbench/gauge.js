@@ -83,6 +83,16 @@ export function drawLinks(dash, layer, gauge) {
     if (!card) continue;
     const st = rel(stat.getBoundingClientRect());
     const c = rel(card.getBoundingClientRect());
+    if (stat.dataset.place === "below") {
+      const sx = (st.l + st.r) / 2;
+      layer.append(
+        s("line", { x1: cx, y1: cy + R, x2: sx, y2: st.t - 6, class: "leader" }),
+        s("circle", { cx, cy: cy + R, r: 2, class: "node" }),
+        s("polyline", { points: `${sx},${st.b + 6} ${sx},${c.t}`, class: "wire" }),
+        s("circle", { cx: sx, cy: c.t, r: 2.5, class: "node end" }),
+      );
+      continue;
+    }
     const left = st.r <= cx;
     const sy = (st.t + st.b) / 2;
     const inner = left ? st.r + 6 : st.l - 6;

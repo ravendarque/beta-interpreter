@@ -44,9 +44,6 @@
             <button type="button" class="stat" data-open="steps" data-link="a-steps">
               <span class="v" id="s-steps"></span><span class="l">Steps</span>
             </button>
-            <button type="button" class="stat" data-open="reading" data-link="a-trace">
-              <span class="v" id="s-tokens"></span><span class="l">Tokens</span>
-            </button>
           </div>
           <svg class="gauge" id="gauge" viewBox="0 0 200 200" role="img" aria-labelledby="gauge-title">
             <title id="gauge-title">Recognised words and confidence in the reading</title>
@@ -60,26 +57,11 @@
             </button>
           </div>
         </div>
-        <form class="card a-rate rate-card" id="rating" aria-labelledby="t-rate">
-          <header class="card-head">
-            <h2 id="t-rate">Rate reading</h2>
-            <span class="figure-sm" id="rating-history"></span>
-          </header>
-          <div class="card-body rate-body">
-            <fieldset class="score">
-              <legend class="visually-hidden">Overall score</legend>
-              <div class="score-row" id="score"></div>
-            </fieldset>
-            <fieldset class="tags">
-              <legend class="visually-hidden">What went wrong</legend>
-              <div class="tag-row" id="tags"></div>
-            </fieldset>
-            <div class="rate-foot">
-              <button type="submit" class="primary" id="save-rating" disabled>Save rating</button>
-              <span class="status" id="rating-status" role="status"></span>
-            </div>
-          </div>
-        </form>
+        <div class="stats stats-below">
+          <button type="button" class="stat" data-open="reading" data-link="a-trace" data-place="below">
+            <span class="v" id="s-tokens"></span><span class="l">Tokens</span>
+          </button>
+        </div>
       </section>
 
       <section class="card a-movements" aria-labelledby="t-movements">

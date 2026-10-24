@@ -356,7 +356,7 @@ h2 {
   gap: 8px;
 }
 
-.card-body:not(.rate-body)::after {
+.card-body::after {
   content: "";
   position: absolute;
   inset-inline: 0;
@@ -678,6 +678,15 @@ textarea:focus-visible {
   align-items: flex-start;
 }
 
+.stats-below {
+  align-items: center;
+  padding-block-end: 4px;
+}
+
+.stats-below .stat {
+  text-align: center;
+}
+
 .stat {
   display: grid;
   padding: 3px 12px 4px;
@@ -750,10 +759,6 @@ textarea:focus-visible {
 .links .node.end {
   fill: var(--bg);
   stroke: var(--rule-hi);
-}
-
-.rate-card .card-body {
-  flex: none;
 }
 
 /* Movements card */
@@ -844,106 +849,6 @@ textarea:focus-visible {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-/* Rating card */
-fieldset {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  min-inline-size: 0;
-}
-
-.score-row {
-  display: flex;
-  gap: 4px;
-}
-
-.score-opt,
-.tag-opt {
-  position: relative;
-}
-
-.score-opt input,
-.tag-opt input {
-  position: absolute;
-  inset: 0;
-  margin: 0;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.score-opt span {
-  display: grid;
-  place-items: center;
-  inline-size: 34px;
-  block-size: 28px;
-  border: 1px solid var(--rule);
-  font-family: var(--mono);
-  font-size: 0.85rem;
-}
-
-.score-opt input:checked + span {
-  background: var(--hi);
-  color: var(--bg);
-  box-shadow: 0 0 12px var(--glow);
-}
-
-.score-opt input:focus-visible + span,
-.tag-opt input:focus-visible + span {
-  outline: 1.5px solid var(--hi);
-  outline-offset: 2px;
-}
-
-.tag-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
-}
-
-.tag-opt span {
-  display: inline-block;
-  padding: 0 7px;
-  border: 1px solid var(--rule);
-  font-size: 0.72rem;
-}
-
-.tag-opt input:checked + span {
-  border-color: var(--warn);
-  color: var(--warn);
-  background: color-mix(in srgb, var(--warn) 12%, transparent);
-}
-
-.rate-body {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  grid-template-areas:
-    "score foot"
-    "tags tags";
-  align-content: start;
-  align-items: center;
-  gap: 8px 10px;
-}
-
-.rate-body .score {
-  grid-area: score;
-}
-
-.rate-body .tags {
-  grid-area: tags;
-}
-
-.rate-foot {
-  grid-area: foot;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.status {
-  color: var(--ok);
-  font-size: 0.78rem;
 }
 
 .primary,

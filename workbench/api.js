@@ -1,14 +1,12 @@
 import { execFile } from "node:child_process";
-import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { promisify } from "node:util";
-import { ratingRecord } from "./ratings.js";
 import { addPhrase, addWords, movePhrase, removePhrase } from "./vocab-edit.js";
 
 const run = promisify(execFile);
 const root = new URL("..", import.meta.url);
 const TERMS = new URL("vocabulary/terms.json", root);
 const WORDS = new URL("vocabulary/words.json", root);
-const RATINGS = new URL("workbench/data/ratings.jsonl", root);
 const BIOME = new URL("node_modules/.bin/biome", root);
 
 /** @param {string[]} args */
@@ -19,18 +17,6 @@ const readJson = async file => JSON.parse(await readFile(file, "utf8"));
 async function writeJson(file, data) {
   await writeFile(file, `${JSON.stringify(data, null, 2)}\n`);
   await run(BIOME.pathname, ["format", "--write", file.pathname], { cwd: root });
-}
-
-async function readRatings() {
-  try {
-    return (await readFile(RATINGS, "utf8"))
-      .split("\n")
-      .filter(Boolean)
-      .map(line => JSON.parse(line));
-  } catch (e) {
-    if (/** @type {NodeJS.ErrnoException} */ (e).code === "ENOENT") return [];
-    throw e;
-  }
 }
 
 async function status() {
@@ -65,12 +51,6 @@ const POST = {
     if (result.added.length) await writeJson(WORDS, result.words);
     return { added: result.added, skipped: result.skipped };
   },
-  async "/api/ratings"(body) {
-    const record = ratingRecord(body, { at: new Date().toISOString(), sha: (await status()).sha });
-    await mkdir(new URL(".", RATINGS), { recursive: true });
-    await appendFile(RATINGS, `${JSON.stringify(record)}\n`);
-    return record;
-  },
 };
 
 /** @type {Record<string, () => Promise<unknown>>} */
@@ -80,7 +60,6 @@ const GET = {
     return { terms, words };
   },
   "/api/status": status,
-  "/api/ratings": readRatings,
 };
 
 /** @param {import("node:http").IncomingMessage} req */

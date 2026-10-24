@@ -20,6 +20,6 @@ pnpm lint
 pnpm workbench
 ```
 
-`pnpm workbench` starts the local R&D workbench at http://localhost:5174. Paste a beta to see how it reads, rate the reading, and correct the vocabulary in place. Corrections are written to `vocabulary/`, so review them with `git diff` before committing. Ratings go to `workbench/data/`, which git ignores, and never include the beta's text.
+`pnpm workbench` starts the local R&D workbench at http://localhost:5174. Paste a beta to see how it reads and correct the vocabulary in place. Corrections are written to `vocabulary/`, so review them with `git diff` before committing.
 
 The vocabulary lives in `vocabulary/terms.json` (taxonomy terms) and `vocabulary/words.json` (limbs, prepositions, crux markers, stop words and step breaks). Changing the interpreter's vocabulary means changing those files, not the code.

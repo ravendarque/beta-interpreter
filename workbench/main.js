@@ -3,7 +3,6 @@ import { toMovements } from "../src/movements.js";
 import { holdName, say, who } from "../src/say.js";
 import { $, h } from "./dom.js";
 import { groupQuestions } from "./questions.js";
-import { METRICS, TAGS } from "./ratings.js";
 import { confidence } from "./confidence.js";
 import { drawLinks, renderGauge } from "./gauge.js";
 
@@ -72,12 +71,8 @@ const state = {
   /** @type {Questions | null} */ questions: null,
   /** @type {number | null} */ selected: null,
   /** @type {Set<string>} */ picked: new Set(),
-  /** @type {number | null} */ score: null,
-  /** @type {Set<string>} */ tags: new Set(),
-  corrections: 0,
   /** @type {string[]} */ log: [],
   /** @type {{ sha: string, diff: string, changed: number } | null} */ status: null,
-  /** @type {{ score: number, tags: string[] }[]} */ ratings: [],
   /** @type {View} */ view: "dashboard",
 };
 
@@ -114,7 +109,6 @@ async function loadVocabulary() {
 
 async function loadStatus() {
   state.status = await api("/api/status");
-  state.ratings = await api("/api/ratings");
 }
 
 /** @param {string} path @param {unknown} body @param {(result: any) => string} done */
@@ -122,7 +116,6 @@ async function correct(path, body, done) {
   try {
     const result = await api(path, body);
     const message = done(result);
-    state.corrections++;
     state.log.unshift(message);
     await loadVocabulary();
     await loadStatus();
@@ -158,14 +151,9 @@ function metrics() {
     recognised: words.length ? (words.length - r.unknown.length) / words.length : 1,
     steps: r.beats.length,
     movements: rec.movements.length,
-    unknown: q.words.length,
-    ambiguous: r.amb.length,
-    fuzzy: r.fuzzy.length,
     inferred:
       contacts.filter(c => c?.side === "inferred" || c?.holdSource === "inferred").length +
       rec.movements.filter(m => m.transition?.side === "inferred").length,
-    unplaced: rec.movements.flatMap(m => [...m.start.unplaced, ...m.end.unplaced]).length,
-    corrections: state.corrections,
   };
 }
 
@@ -178,7 +166,6 @@ function run() {
   if (state.selected !== null && !reading.trace[state.selected]) state.selected = null;
   renderDashboard();
   if (state.view !== "dashboard") renderDetail();
-  updateRatingButton();
 }
 
 /* Dashboard */
@@ -191,7 +178,6 @@ function renderDashboard() {
   renderQuestionsCard();
   renderMovementsCard();
   renderVocabCard();
-  renderRatingHistory();
   renderTape();
   linkCards();
 }
@@ -940,12 +926,6 @@ function detailVocabulary() {
         )
       : [h("span", { class: "d-ctx", text: "No uncommitted changes." })],
   );
-  const n = state.ratings.length;
-  /** @type {Record<string, number>} */
-  const tagCounts = {};
-  for (const r of state.ratings) for (const t of r.tags) tagCounts[t] = (tagCounts[t] ?? 0) + 1;
-  const hist = [1, 2, 3, 4, 5].map(v => state.ratings.filter(r => r.score === v).length);
-  const max = Math.max(1, ...hist);
   return [
     h("div", { class: "pane-grid" }, [
       panel(
@@ -968,27 +948,6 @@ function detailVocabulary() {
             ]
           : [h("p", { class: "empty", text: "No corrections yet." })],
       ),
-      panel(`Ratings (${n})`, [
-        h(
-          "div",
-          { class: "hist", role: "img", "aria-label": hist.map((c, i) => `${c} rated ${i + 1}`).join(", ") },
-          hist.map((c, i) =>
-            h("div", { class: "bar" }, [
-              h("span", { style: `block-size:${(c / max) * 100}%` }),
-              h("b", { text: String(i + 1) }),
-              h("i", { text: String(c) }),
-            ]),
-          ),
-        ),
-        h(
-          "dl",
-          { class: "tag-counts" },
-          Object.entries(TAGS).flatMap(([id, label]) => [
-            h("dt", { text: label }),
-            h("dd", { text: String(tagCounts[id] ?? 0) }),
-          ]),
-        ),
-      ]),
     ]),
   ];
 }
@@ -1219,43 +1178,6 @@ function inspector() {
   return kids;
 }
 
-/* Rating */
-
-function renderRatingForm() {
-  $("score").replaceChildren(
-    ...[1, 2, 3, 4, 5].map(n =>
-      h("label", { class: "score-opt" }, [
-        h("input", { type: "radio", name: "score", value: n, "aria-label": `Score ${n}` }),
-        h("span", { text: String(n) }),
-      ]),
-    ),
-  );
-  $("tags").replaceChildren(
-    ...Object.entries(TAGS).map(([id, label]) =>
-      h("label", { class: "tag-opt" }, [h("input", { type: "checkbox", value: id }), h("span", { text: label })]),
-    ),
-  );
-}
-
-function renderRatingHistory() {
-  const n = state.ratings.length;
-  $("rating-history").textContent = n
-    ? `${n} saved, mean ${(state.ratings.reduce((a, r) => a + r.score, 0) / n).toFixed(1)}`
-    : "none saved";
-}
-
-function updateRatingButton() {
-  /** @type {HTMLButtonElement} */ ($("save-rating")).disabled = state.score === null || !beta.value.trim();
-}
-
-function resetRating() {
-  state.score = null;
-  state.tags.clear();
-  for (const el of /** @type {NodeListOf<HTMLInputElement>} */ ($("rating").querySelectorAll("input")))
-    el.checked = false;
-  updateRatingButton();
-}
-
 /* Wiring */
 
 function wire() {
@@ -1297,39 +1219,11 @@ function wire() {
   };
   for (const type of ["mouseover", "focusin"]) document.addEventListener(type, hover);
   for (const type of ["mouseleave", "focusout"]) $("tape").addEventListener(type, () => lightFacet(null));
-  $("rating").addEventListener("change", e => {
-    const input = /** @type {HTMLInputElement} */ (e.target);
-    if (input.name === "score") state.score = Number(input.value);
-    else if (input.checked) state.tags.add(input.value);
-    else state.tags.delete(input.value);
-    updateRatingButton();
-  });
-  $("rating").addEventListener("submit", async e => {
-    e.preventDefault();
-    const m = metrics();
-    if (!m || state.score === null) return;
-    /** @type {Record<string, number>} */
-    const numbers = {};
-    for (const k of METRICS) numbers[k] = /** @type {Record<string, number>} */ (m)[k];
-    try {
-      await api("/api/ratings", { score: state.score, tags: [...state.tags], metrics: numbers });
-      $("rating-status").textContent = "Saved";
-      resetRating();
-      await loadStatus();
-      renderRatingHistory();
-      window.setTimeout(() => {
-        $("rating-status").textContent = "";
-      }, 2500);
-    } catch (err) {
-      toast(err instanceof Error ? err.message : String(err), true);
-    }
-  });
 }
 
 async function start() {
   renderTabs();
   new ResizeObserver(linkCards).observe($("dash"));
-  renderRatingForm();
   wire();
   try {
     await loadVocabulary();
