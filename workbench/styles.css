@@ -1041,7 +1041,7 @@ fieldset {
   gap: 6px;
   padding: 0 10px 0 8px;
   border: 1px solid transparent;
-  border-inline-start: 4px solid var(--c);
+  border-inline-start: 7px solid var(--c);
   background: color-mix(in srgb, var(--c) 8%, transparent);
   transition: opacity 120ms, background 120ms, box-shadow 120ms;
 }
@@ -1053,7 +1053,7 @@ fieldset {
 .fm dd {
   margin: 0;
   font-family: var(--mono);
-  font-size: 0.86rem;
+  font-size: 0.8rem;
   line-height: 1.5;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
