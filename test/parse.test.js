@@ -111,6 +111,15 @@ describe("parse", () => {
     expect(r.beats.map(say)).toEqual(["Both feet: on small dishes.", "Hand move to a sharp shallow crimp."]);
   });
 
+  it("keeps a qualifier on the step when a role word or move comes before the hold", () => {
+    const { parse: read } = createInterpreter({
+      ...vocabulary,
+      words: { ...vocabulary.words, qualifiers: [...vocabulary.words.qualifiers, "hard"] },
+    });
+    const [b] = read("push hard to reach the lip").beats;
+    expect([b.qualifiers, b.holds[0].qualifiers, say(b)]).toEqual([["hard"], [], "Hand move to a lip."]);
+  });
+
   it("keeps a qualifier with no hold after it on the step", () => {
     expect(parse("massive dyno").beats[0].qualifiers).toEqual(["massive"]);
   });

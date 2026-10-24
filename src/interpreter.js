@@ -316,6 +316,8 @@ export function createInterpreter({ terms, words }) {
         if (m.kind === "prep") {
           role = m.role;
           rockRun = false;
+          beat.qualifiers.push(...pendingQ);
+          pendingQ = [];
           continue;
         }
         if (m.kind === "crux") {
@@ -324,6 +326,8 @@ export function createInterpreter({ terms, words }) {
         }
         if (m.kind === "move") {
           rockRun = false;
+          beat.qualifiers.push(...pendingQ);
+          pendingQ = [];
           continue;
         }
         if (m.kind === "qualifier") {
