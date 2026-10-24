@@ -35,18 +35,21 @@
       "part": "hand"
     },
     "hands": {
+      "side": "both",
       "part": "hand"
     },
     "foot": {
       "part": "foot"
     },
     "feet": {
+      "side": "both",
       "part": "foot"
     },
     "knee": {
       "part": "leg"
     },
     "knees": {
+      "side": "both",
       "part": "leg"
     },
     "double": {
@@ -65,8 +68,29 @@
     "using": "on",
     "with": "on"
   },
-  "crux": ["crux", "hard", "hardest"],
-  "stop": [
+  "crux": ["crux"],
+  "moves": {
+    "reach": "upper",
+    "catch": "upper",
+    "grab": "upper"
+  },
+  "qualifiers": [
+    "high",
+    "low",
+    "big",
+    "small",
+    "little",
+    "tiny",
+    "huge",
+    "massive",
+    "good",
+    "bad",
+    "shallow",
+    "deep",
+    "sharp",
+    "blunt"
+  ],
+  "filler": [
     "a",
     "an",
     "the",
@@ -80,13 +104,6 @@
     "down",
     "out",
     "over",
-    "big",
-    "small",
-    "little",
-    "good",
-    "bad",
-    "tiny",
-    "huge",
     "quick",
     "really",
     "very",
@@ -106,13 +123,6 @@
     "start",
     "finish",
     "top",
-    "high",
-    "low",
-    "stand",
-    "sit",
-    "reach",
-    "catch",
-    "grab",
     "then",
     "it's",
     "straight",

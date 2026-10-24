@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { vocabulary } from "../src/index.js";
-import { addPhrase, addStopWord, movePhrase, owners, removePhrase } from "../workbench/vocab-edit.js";
+import { addPhrase, addWord, addWords, movePhrase, owners, removePhrase } from "../workbench/vocab-edit.js";
 
 const fresh = () => structuredClone(vocabulary);
 /** @param {import("../src/interpreter.js").Term[]} terms @param {string} id */
@@ -44,13 +44,33 @@ describe("vocabulary edits", () => {
     expect(owners(fresh().terms, "jam").map(t => t.id)).toEqual(["jam-hand", "jam-wedge"]);
   });
 
-  it("adds a stop word", () => {
-    expect(addStopWord(fresh().words, "Securely").stop).toContain("securely");
+  it("adds a word to a grammar list", () => {
+    expect(addWord(fresh().words, "filler", "Securely").filler).toContain("securely");
+    expect(addWord(fresh().words, "qualifiers", "hard").qualifiers).toContain("hard");
+    expect(addWord(fresh().words, "moves", "slap", [], "upper").moves.slap).toBe("upper");
+    expect(addWord(fresh().words, "moves", "stomp", [], "lower").moves.stomp).toBe("lower");
   });
 
-  it("refuses a stop word that is already a stop word, a term phrase, or more than one word", () => {
-    expect(() => addStopWord(fresh().words, "the")).toThrow("“the” is already a stop word.");
-    expect(() => addStopWord(fresh().words, "very good")).toThrow("A stop word is a single word.");
-    expect(() => addStopWord(fresh().words, "jug", fresh().terms)).toThrow("“jug” is a vocabulary phrase (Jug).");
+  it("refuses a word already in any grammar list, a term phrase, more than one word, or an unknown list", () => {
+    expect(() => addWord(fresh().words, "filler", "the")).toThrow("“the” is already a filler word.");
+    expect(() => addWord(fresh().words, "qualifiers", "the")).toThrow("“the” is already a filler word.");
+    expect(() => addWord(fresh().words, "filler", "tiny")).toThrow("“tiny” is already a qualifier.");
+    expect(() => addWord(fresh().words, "filler", "reach")).toThrow("“reach” is already a move word.");
+    expect(() => addWord(fresh().words, "moves", "slap")).toThrow("A move word needs a region: upper, lower or full.");
+    expect(() => addWord(fresh().words, "filler", "left")).toThrow("“left” is already a limb word.");
+    expect(() => addWord(fresh().words, "filler", "very good")).toThrow("A word list takes single words.");
+    expect(() => addWord(fresh().words, "filler", "jug", fresh().terms)).toThrow("“jug” is a vocabulary phrase (Jug).");
+    expect(() => addWord(fresh().words, "limbs", "paw")).toThrow("No word list called “limbs” can be taught.");
+  });
+
+  it("adds several words at once and reports the ones it skipped", () => {
+    const r = addWords(fresh().words, "filler", ["Think", "the", "jug", "think", "pretty"], fresh().terms);
+    expect(r.added).toEqual(["think", "pretty"]);
+    expect(r.skipped).toEqual([
+      { word: "the", reason: "“the” is already a filler word." },
+      { word: "jug", reason: "“jug” is a vocabulary phrase (Jug)." },
+      { word: "think", reason: "“think” is already a filler word." },
+    ]);
+    expect(r.words.filler.slice(-2)).toEqual(["think", "pretty"]);
   });
 });

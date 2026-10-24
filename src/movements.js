@@ -87,6 +87,7 @@ function place(state, at, part, { hold, technique }) {
 /** @param {Beat} beat */
 const closes = beat =>
   beat.moves.length > 0 ||
+  !!beat.move ||
   beat.order.some(p => (p.kind === "hold" ? p.hold.role === "target" : p.kind === "position" && p.role === "target"));
 
 /** @param {Reading} reading @returns {MovementRecord} */
@@ -134,6 +135,7 @@ export function toMovements(reading) {
     steps.push(i);
     crux ||= beat.crux;
     issues.push(...beat.issues);
+    if (beat.unread) return;
     /** @type {Placement} */
     const stated = { keys: keysFor(beat.side, beat.part), side: "stated" };
     const closing = closes(beat);

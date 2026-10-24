@@ -27,12 +27,35 @@ describe("vocabulary", () => {
     for (const m of t.match) expect(norm(m)).not.toBe("");
   });
 
-  it("only leaves unmatched the group terms that clash with stop words", () => {
-    expect(terms.filter(t => !t.match.length).map(t => t.id)).toEqual(["sit", "stand"]);
-    expect(words.stop).toEqual(expect.arrayContaining(["sit", "stand"]));
+  it("only leaves the Stand group term unmatched", () => {
+    expect(terms.filter(t => !t.match.length).map(t => t.id)).toEqual(["stand"]);
   });
 
   it("does not repeat a phrase within a term", () => {
     for (const t of terms) expect([t.id, new Set(t.match.map(norm)).size]).toEqual([t.id, t.match.length]);
+  });
+
+  it("keeps each grammar word in one list only, and filler apart from term phrases", () => {
+    const lists = {
+      limbs: Object.keys(words.limbs),
+      prepositions: Object.keys(words.prepositions),
+      crux: words.crux,
+      moves: Object.keys(words.moves),
+      qualifiers: words.qualifiers,
+      filler: words.filler,
+    };
+    const seen = new Map();
+    for (const [list, entries] of Object.entries(lists))
+      for (const w of entries) {
+        expect([w, seen.get(w)]).toEqual([w, undefined]);
+        seen.set(w, list);
+      }
+    const phrases = new Set(terms.flatMap(t => t.match.map(norm)));
+    expect(words.filler.filter(w => phrases.has(w))).toEqual([]);
+  });
+
+  it("gives every move word a taxonomy region", () => {
+    for (const [w, region] of Object.entries(words.moves))
+      expect([w, REGIONS]).toEqual([w, expect.arrayContaining([region])]);
   });
 });

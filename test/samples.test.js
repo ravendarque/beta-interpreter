@@ -20,7 +20,7 @@ describe("paraphrased sample betas", () => {
   it("reads a steep boulder with a crux and a combined hold", () => {
     expect(
       read(
-        "Overhung cave. Both hands matched on the jug, right heel hook over the lip, then cross the left hand to a sidepull crimp. Deadpoint to the slopey pinch, hardest move! Match and rock over to top out.",
+        "Overhung cave. Both hands matched on the jug, right heel hook over the lip, then cross the left hand to a sidepull crimp. Deadpoint to the slopey pinch, crux! Match and rock over to top out.",
       ),
     ).toEqual({
       terrain: ["Overhang"],

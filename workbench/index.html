@@ -8,111 +8,109 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wdth,wght@75..100,400..700&family=Martian+Mono:wdth,wght@75..100,300..600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Saira:wdth,wght@75..125,300..700&family=Martian+Mono:wdth,wght@75..100,300..600&display=swap"
     />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <header class="strip">
+    <header class="top">
       <div class="mark">
         <svg viewBox="0 0 32 32" aria-hidden="true" class="glyph">
-          <path d="M4 26 L11 14 L16 20 L22 7 L28 26 Z" />
-          <circle cx="22" cy="7" r="2.6" />
-          <circle cx="11" cy="14" r="2" />
+          <circle cx="16" cy="16" r="13" class="g-ring" />
+          <path d="M6 23 L12 13 L16 18 L21 8 L26 23" class="g-line" />
+          <circle cx="21" cy="8" r="2" class="g-dot" />
         </svg>
-        <div>
-          <h1>Beta interpreter</h1>
-          <p class="sub">Rule engine workbench</p>
-        </div>
+        <h1>Beta interpreter <span>workbench</span></h1>
       </div>
-      <dl class="gauges" id="gauges" aria-live="polite"></dl>
-      <div class="build" id="build"></div>
+      <p class="sysline" id="sysline" aria-live="polite"></p>
     </header>
 
-    <main class="bench">
-      <section class="col col-input" aria-labelledby="h-input">
-        <div class="panel">
-          <div class="panel-head">
-            <h2 id="h-input">Beta</h2>
-            <p class="note">Kept in this tab only. Nothing you paste is saved.</p>
-          </div>
-          <textarea id="beta" spellcheck="false" autocomplete="off" rows="5" aria-label="Beta text"></textarea>
-          <div class="samples" id="samples" aria-label="Sample betas"></div>
-        </div>
+    <nav class="tabs-main" id="tabs" aria-label="Views"></nav>
 
-        <div class="panel">
-          <div class="panel-head">
-            <h2>Reading</h2>
-            <div class="legend" id="legend"></div>
+    <main class="dash" id="dash">
+      <section class="core a-core" aria-label="Beta and gauge">
+        <div class="input">
+          <label for="beta" class="input-label">
+            <span>Beta</span>
+            <span class="hint">Kept in this tab only. Nothing you paste is saved.</span>
+          </label>
+          <textarea id="beta" spellcheck="false" autocomplete="off" rows="4" placeholder="Paste or type a beta"></textarea>
+        </div>
+        <div class="radial">
+          <div class="stats stats-left">
+            <button type="button" class="stat" data-open="movements" data-link="a-movements">
+              <span class="v" id="s-movements"></span><span class="l">Movements</span>
+            </button>
+            <button type="button" class="stat" data-open="steps" data-link="a-steps">
+              <span class="v" id="s-steps"></span><span class="l">Steps</span>
+            </button>
           </div>
-          <p class="readback" id="readback"></p>
-          <div class="tape-wrap">
-            <ol class="tape" id="tape" aria-label="Token trace"></ol>
+          <svg class="gauge" id="gauge" viewBox="0 0 200 200" role="img" aria-labelledby="gauge-title">
+            <title id="gauge-title">Recognised words and confidence in the reading</title>
+          </svg>
+          <div class="stats stats-right">
+            <button type="button" class="stat" data-open="questions" data-link="a-questions">
+              <span class="v" id="s-questions"></span><span class="l">Questions</span>
+            </button>
+            <button type="button" class="stat" data-open="vocabulary" data-link="a-vocab">
+              <span class="v" id="s-vocab"></span><span class="l">Vocabulary changes</span>
+            </button>
           </div>
         </div>
-
-        <div class="panel" id="questions-panel">
-          <div class="panel-head">
-            <h2>Open questions</h2>
-            <span class="count" id="q-count"></span>
-          </div>
-          <div id="questions"></div>
-        </div>
-      </section>
-
-      <section class="col col-record" aria-labelledby="h-record">
-        <div class="panel panel-record">
-          <div class="panel-head">
-            <h2 id="h-record">Record</h2>
-            <div class="tabs" role="tablist" aria-label="Record view">
-              <button role="tab" id="tab-movements" aria-selected="true" aria-controls="view-movements">Movements</button>
-              <button role="tab" id="tab-steps" aria-selected="false" aria-controls="view-steps">Steps</button>
-              <button role="tab" id="tab-json" aria-selected="false" aria-controls="view-json">JSON</button>
-            </div>
-          </div>
-          <div class="climb" id="climb"></div>
-          <div role="tabpanel" id="view-movements" aria-labelledby="tab-movements"></div>
-          <div role="tabpanel" id="view-steps" aria-labelledby="tab-steps" hidden></div>
-          <div role="tabpanel" id="view-json" aria-labelledby="tab-json" hidden><pre class="json" id="json"></pre></div>
-          <div class="key" id="key"></div>
+        <div class="stats stats-below">
+          <button type="button" class="stat" data-open="reading" data-link="a-trace" data-place="below">
+            <span class="v" id="s-tokens"></span><span class="l">Tokens</span>
+          </button>
         </div>
       </section>
 
-      <aside class="col col-inspect" aria-label="Inspector">
-        <div class="panel" id="inspector">
-          <div class="panel-head"><h2>Inspector</h2></div>
-          <div id="inspect-body"></div>
-        </div>
+      <section class="card a-movements" aria-labelledby="t-movements">
+        <header class="card-head">
+          <h2 id="t-movements">Movements</h2>
+          <button type="button" class="open" data-open="movements">Details</button>
+        </header>
+        <div class="card-body" id="c-movements"></div>
+      </section>
 
-        <form class="panel" id="rating">
-          <div class="panel-head">
-            <h2>Rate this reading</h2>
-            <span class="count" id="rating-history"></span>
-          </div>
-          <fieldset class="score">
-            <legend>Overall</legend>
-            <div class="score-row" id="score"></div>
-          </fieldset>
-          <fieldset class="tags">
-            <legend>What went wrong</legend>
-            <div class="tag-row" id="tags"></div>
-          </fieldset>
-          <div class="rating-foot">
-            <button type="submit" class="primary" id="save-rating" disabled>Save rating</button>
-            <span class="status" id="rating-status" role="status"></span>
-          </div>
-        </form>
+      <section class="card a-steps" aria-labelledby="t-steps">
+        <header class="card-head">
+          <h2 id="t-steps">Steps</h2>
+          <button type="button" class="open" data-open="steps">Details</button>
+        </header>
+        <div class="card-body" id="c-steps"></div>
+      </section>
 
-        <div class="panel">
-          <div class="panel-head">
-            <h2>Vocabulary changes</h2>
-            <span class="count" id="diff-count"></span>
-          </div>
-          <p class="note">Corrections are written to <code>vocabulary/</code>. Review and commit them with git.</p>
-          <pre class="diff" id="diff"></pre>
-        </div>
-      </aside>
+      <section class="card a-questions" aria-labelledby="t-questions">
+        <header class="card-head">
+          <h2 id="t-questions">Open questions</h2>
+          <button type="button" class="open" data-open="questions">Details</button>
+        </header>
+        <div class="card-body" id="c-questions"></div>
+      </section>
+
+
+      <section class="card a-vocab" aria-labelledby="t-vocab">
+        <header class="card-head">
+          <h2 id="t-vocab">Vocabulary</h2>
+          <button type="button" class="open" data-open="vocabulary">Details</button>
+        </header>
+        <div class="card-body" id="c-vocab"></div>
+      </section>
+
+      <section class="card a-trace" aria-labelledby="t-trace">
+        <header class="card-head">
+          <h2 id="t-trace">Reading</h2>
+          <div class="trace-summary" id="c-spectrum"></div>
+          <button type="button" class="open" data-open="reading">Details</button>
+        </header>
+        <div class="tape-wrap"><ol class="tape" id="tape" aria-label="Token trace"></ol></div>
+      </section>
+      <svg class="links" id="links" aria-hidden="true"></svg>
     </main>
+
+    <section class="detail" id="detail" aria-label="Details" hidden>
+      <div class="detail-body" id="detail-body"></div>
+    </section>
 
     <div class="toast" id="toast" role="status" hidden></div>
     <script type="module" src="./main.js"></script>

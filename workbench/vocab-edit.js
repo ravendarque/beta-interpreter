@@ -38,12 +38,56 @@ export function removePhrase(terms, id, phrase) {
 /** @param {Term[]} terms @param {string} fromId @param {string} toId @param {string} phrase */
 export const movePhrase = (terms, fromId, toId, phrase) => addPhrase(removePhrase(terms, fromId, phrase), toId, phrase);
 
-/** @param {Words} words @param {string} word @param {Term[]} [terms] @returns {Words} */
-export function addStopWord(words, word, terms = []) {
+export const TEACHABLE = /** @type {const} */ ({ filler: "filler word", qualifiers: "qualifier", moves: "move word" });
+const REGIONS = ["upper", "lower", "full"];
+
+/** @param {Words} words @returns {[string, string[]][]} */
+const grammar = words => [
+  ["limb word", Object.keys(words.limbs)],
+  ["role word", Object.keys(words.prepositions)],
+  ["crux marker", words.crux],
+  ["move word", Object.keys(words.moves)],
+  ["qualifier", words.qualifiers],
+  ["filler word", words.filler],
+];
+
+/**
+ * @param {Words} words @param {string} list @param {string} word @param {Term[]} [terms]
+ * @param {string} [region] the taxonomy region a move word moves: upper, lower or full
+ * @returns {Words}
+ */
+export function addWord(words, list, word, terms = [], region) {
+  if (!Object.hasOwn(TEACHABLE, list)) throw new Error(`No word list called “${list}” can be taught.`);
   const k = key(word);
-  if (k.includes(" ")) throw new Error("A stop word is a single word.");
-  if (words.stop.includes(k)) throw new Error(`“${k}” is already a stop word.`);
+  if (k.includes(" ")) throw new Error("A word list takes single words.");
+  const taken = grammar(words).find(([, entries]) => entries.includes(k));
+  if (taken) throw new Error(`“${k}” is already a ${taken[0]}.`);
   const used = owners(terms, k);
   if (used.length) throw new Error(`“${k}” is a vocabulary phrase (${used.map(t => t.name).join(", ")}).`);
-  return { ...words, stop: [...words.stop, k] };
+  if (list === "moves") {
+    if (!region || !REGIONS.includes(region)) throw new Error("A move word needs a region: upper, lower or full.");
+    return { ...words, moves: { ...words.moves, [k]: region } };
+  }
+  const name = /** @type {"filler" | "qualifiers"} */ (list);
+  return { ...words, [name]: [...words[name], k] };
+}
+
+/**
+ * @param {Words} words @param {string} list @param {string[]} items @param {Term[]} [terms]
+ * @param {string} [region]
+ */
+export function addWords(words, list, items, terms = [], region) {
+  let next = words;
+  /** @type {string[]} */
+  const added = [];
+  /** @type {{ word: string, reason: string }[]} */
+  const skipped = [];
+  for (const word of items)
+    try {
+      next = addWord(next, list, word, terms, region);
+      added.push(norm(word));
+    } catch (e) {
+      skipped.push({ word: norm(word) || word, reason: e instanceof Error ? e.message : String(e) });
+    }
+  return { words: next, added, skipped };
 }

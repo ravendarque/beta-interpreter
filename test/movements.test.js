@@ -110,7 +110,7 @@ describe("toMovements", () => {
 
   it("matches feet on the hold the last foot is on", () => {
     expect(read("right foot on the edge then match feet, then dyno to the jug")[0].start.limbs).toEqual({
-      lf: { side: "implied", hold: ["edge"], holdSource: "inferred", techniques: ["match"] },
+      lf: { side: "stated", hold: ["edge"], holdSource: "inferred", techniques: ["match"] },
       rf: { side: "stated", hold: ["edge"], holdSource: "stated", techniques: ["match"] },
     });
   });

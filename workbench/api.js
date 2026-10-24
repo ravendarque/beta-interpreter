@@ -1,14 +1,12 @@
 import { execFile } from "node:child_process";
-import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { promisify } from "node:util";
-import { ratingRecord } from "./ratings.js";
-import { addPhrase, addStopWord, movePhrase, removePhrase } from "./vocab-edit.js";
+import { addPhrase, addWords, movePhrase, removePhrase } from "./vocab-edit.js";
 
 const run = promisify(execFile);
 const root = new URL("..", import.meta.url);
 const TERMS = new URL("vocabulary/terms.json", root);
 const WORDS = new URL("vocabulary/words.json", root);
-const RATINGS = new URL("workbench/data/ratings.jsonl", root);
 const BIOME = new URL("node_modules/.bin/biome", root);
 
 /** @param {string[]} args */
@@ -19,18 +17,6 @@ const readJson = async file => JSON.parse(await readFile(file, "utf8"));
 async function writeJson(file, data) {
   await writeFile(file, `${JSON.stringify(data, null, 2)}\n`);
   await run(BIOME.pathname, ["format", "--write", file.pathname], { cwd: root });
-}
-
-async function readRatings() {
-  try {
-    return (await readFile(RATINGS, "utf8"))
-      .split("\n")
-      .filter(Boolean)
-      .map(line => JSON.parse(line));
-  } catch (e) {
-    if (/** @type {NodeJS.ErrnoException} */ (e).code === "ENOENT") return [];
-    throw e;
-  }
 }
 
 async function status() {
@@ -58,16 +44,12 @@ const POST = {
     await writeJson(TERMS, { terms: next });
     return { ok: true };
   },
-  async "/api/vocabulary/stop"({ word }) {
+  async "/api/vocabulary/words"({ list, words: items, region }) {
+    if (!Array.isArray(items) || !items.every(w => typeof w === "string")) throw new Error("Send the words as a list.");
     const [{ terms }, words] = await Promise.all([readJson(TERMS), readJson(WORDS)]);
-    await writeJson(WORDS, addStopWord(words, word, terms));
-    return { ok: true };
-  },
-  async "/api/ratings"(body) {
-    const record = ratingRecord(body, { at: new Date().toISOString(), sha: (await status()).sha });
-    await mkdir(new URL(".", RATINGS), { recursive: true });
-    await appendFile(RATINGS, `${JSON.stringify(record)}\n`);
-    return record;
+    const result = addWords(words, list, items, terms, region);
+    if (result.added.length) await writeJson(WORDS, result.words);
+    return { added: result.added, skipped: result.skipped };
   },
 };
 
@@ -78,7 +60,6 @@ const GET = {
     return { terms, words };
   },
   "/api/status": status,
-  "/api/ratings": readRatings,
 };
 
 /** @param {import("node:http").IncomingMessage} req */
@@ -100,27 +81,24 @@ function isLocalJson(req) {
   return local && req.headers["content-type"]?.startsWith("application/json") === true;
 }
 
-/** @returns {import("vite").Plugin} */
-export function workbenchApi() {
-  return {
-    name: "beta-interpreter-workbench-api",
-    configureServer(server) {
-      server.middlewares.use(async (req, res, next) => {
-        const path = req.url?.split("?")[0] ?? "";
-        const handler = req.method === "POST" ? POST[path] : req.method === "GET" ? GET[path] : undefined;
-        if (!handler) return next();
-        if (req.method === "POST" && !isLocalJson(req)) {
-          res.statusCode = 403;
-          return res.end();
-        }
-        res.setHeader("Content-Type", "application/json");
-        try {
-          res.end(JSON.stringify(await handler(req.method === "POST" ? await body(req) : undefined)));
-        } catch (e) {
-          res.statusCode = 400;
-          res.end(JSON.stringify({ error: e instanceof Error ? e.message : String(e) }));
-        }
-      });
-    },
-  };
+/**
+ * @param {import("node:http").IncomingMessage} req
+ * @param {import("node:http").ServerResponse} res
+ * @param {() => void} next
+ */
+export async function handle(req, res, next) {
+  const path = req.url?.split("?")[0] ?? "";
+  const handler = req.method === "POST" ? POST[path] : req.method === "GET" ? GET[path] : undefined;
+  if (!handler) return next();
+  if (req.method === "POST" && !isLocalJson(req)) {
+    res.statusCode = 403;
+    return res.end();
+  }
+  res.setHeader("Content-Type", "application/json");
+  try {
+    res.end(JSON.stringify(await handler(req.method === "POST" ? await body(req) : undefined)));
+  } catch (e) {
+    res.statusCode = 400;
+    res.end(JSON.stringify({ error: e instanceof Error ? e.message : String(e) }));
+  }
 }

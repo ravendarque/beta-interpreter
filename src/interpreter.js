@@ -16,12 +16,14 @@
  *   limbs: Record<string, Limb>,
  *   prepositions: Record<string, string>,
  *   crux: string[],
- *   stop: string[],
+ *   moves: Record<string, string>,
+ *   qualifiers: string[],
+ *   filler: string[],
  *   splitAlways: string[],
  *   splitBeforeMove: string[],
  * }} Words
  * @typedef {{ terms: Term[], words: Words }} Vocabulary
- * @typedef {{ role: string | null, ori: Term | null, kinds: Term[] }} Hold
+ * @typedef {{ role: string | null, ori: Term | null, kinds: Term[], qualifiers: string[], plural: string[] }} Hold
  * @typedef {{ kind: "hold", hold: Hold } | { kind: "position", term: Term, role: string | null } | { kind: "transition", term: Term }} Part
  * @typedef {{
  *   side: string | null,
@@ -32,6 +34,10 @@
  *   order: Part[],
  *   crux: boolean,
  *   issues: string[],
+ *   clause: number,
+ *   move?: string,
+ *   qualifiers: string[],
+ *   unread?: boolean,
  * }} Beat
  * @typedef {{ s: number, e: number, facet: string, term?: Term, ambiguous?: boolean, fuzzy?: boolean }} Span
  * @typedef {{ occ: string, word: string, options: Term[], s: number }} Ambiguity
@@ -47,14 +53,16 @@
  *   fuzzy: Fuzzy[],
  *   trace: Trace[],
  * }} Reading
- * @typedef {{ s: number, e: number, text: string, kind: string, key?: string, fuzzy?: string[], guess?: string }} Trace
+ * @typedef {{ s: number, e: number, text: string, kind: string, clause: number, key?: string, fuzzy?: string[], guess?: string }} Trace
  * @typedef {{ resolutions?: Map<string, number>, ignored?: Set<string> }} ParseOptions
  * @typedef {{ n: number, s: number, e: number }} Extent
  * @typedef {Extent & (
- *   | { kind: "term", key: string, senses: Term[], fz: string[] }
+ *   | { kind: "term", key: string, senses: Term[], plural: boolean, fz: string[] }
  *   | { kind: "limb", side?: string, part?: string }
  *   | { kind: "prep", role: string }
- *   | { kind: "crux" | "break" | "stop" }
+ *   | { kind: "crux" | "break" | "filler" }
+ *   | { kind: "move", region: string }
+ *   | { kind: "qualifier", word: string }
  *   | { kind: "unknown", raw: string, guess?: string }
  * )} Item
  */
@@ -63,10 +71,14 @@
 export const norm = s =>
   s
     .toLowerCase()
+    .replace(/[’ʼ‘]/g, "'")
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9']+/g, " ")
     .trim();
+
+/** @type {Record<string, string>} */
+const REGION_PART = { upper: "hand", lower: "foot", full: "body" };
 
 /** @param {Term} term */
 export const facetOf = term => term.facets[0];
@@ -99,7 +111,9 @@ export function createInterpreter({ terms, words }) {
   const limbs = new Map(Object.entries(words.limbs));
   const preps = new Map(Object.entries(words.prepositions));
   const crux = new Set(words.crux);
-  const stop = new Set(words.stop);
+  const moveWords = new Map(Object.entries(words.moves));
+  const qualifiers = new Set(words.qualifiers);
+  const filler = new Set(words.filler);
   const splitAlways = new Set(words.splitAlways);
   const splitBeforeMove = new Set(words.splitBeforeMove);
 
@@ -122,7 +136,7 @@ export function createInterpreter({ terms, words }) {
 
   /** @param {string} key */
   function lookup(key) {
-    for (const k of [
+    const variants = [
       key,
       key.replace(/es$/, ""),
       key.replace(/s$/, ""),
@@ -130,9 +144,10 @@ export function createInterpreter({ terms, words }) {
       key.replace(/ed$/, "e"),
       key.replace(/ing$/, ""),
       key.replace(/ing$/, "e"),
-    ]) {
+    ];
+    for (const [i, k] of variants.entries()) {
       const senses = lexicon.get(k);
-      if (senses) return { key: k, senses };
+      if (senses) return { key: k, senses, plural: (i === 1 || i === 2) && k !== key };
     }
     return null;
   }
@@ -141,14 +156,17 @@ export function createInterpreter({ terms, words }) {
   const known = w =>
     limbs.has(w) ||
     preps.has(w) ||
-    stop.has(w) ||
+    filler.has(w) ||
     crux.has(w) ||
+    moveWords.has(w) ||
+    qualifiers.has(w) ||
     splitBeforeMove.has(w) ||
     vocabWords.includes(w) ||
     !!lookup(w);
 
   /** @param {string} key @param {string | null} named */
   const startsStep = (key, named) =>
+    moveWords.has(key) ||
     (lookup(key)?.senses ?? []).some(
       s => facetOf(s) === "transition" || (facetOf(s) === "position" && !fits(named, s.part)),
     );
@@ -159,20 +177,20 @@ export function createInterpreter({ terms, words }) {
    * @returns {Reading}
    */
   function parse(text, { resolutions = new Map(), ignored = new Set() } = {}) {
-    /** @type {{ raw: string, n: string, s: number, e: number, sep: boolean, bang: boolean, fz?: string, guess?: string }[]} */
+    /** @type {{ raw: string, n: string, s: number, e: number, sep: boolean, fz?: string, guess?: string }[]} */
     const toks = [];
-    for (const m of text.matchAll(/[\p{L}\p{N}']+|[.;!,:\n—–]|->|→/gu)) {
+    for (const m of text.matchAll(/[\p{L}\p{N}'’ʼ]+|[.;!,:\n—–]|->|→/gu)) {
       const raw = m[0];
       const n = norm(raw);
       const s = m.index ?? 0;
       /** @type {(typeof toks)[number]} */
-      const tok = { raw, n, s, e: s + raw.length, sep: !n || splitAlways.has(n), bang: raw === "!" };
+      const tok = { raw, n, s, e: s + raw.length, sep: !n || splitAlways.has(n) };
       if (!tok.sep && !known(n) && !ignored.has(n)) {
         const near = n.length >= 3 ? nearest(n) : null;
         if (near && ((n.length >= 5 && near.d === 1) || (n.length >= 8 && near.d === 2))) {
           tok.fz = raw;
           tok.n = near.w;
-        } else tok.guess = near?.w;
+        } else if (near && (near.d === 1 || n.length >= 6)) tok.guess = near.w;
       }
       toks.push(tok);
     }
@@ -186,28 +204,29 @@ export function createInterpreter({ terms, words }) {
       }
       named = limbs.get(tok.n)?.part ?? named;
       if (!splitBeforeMove.has(tok.n)) return;
-      const next = toks[i + 1]?.n;
-      if (next && (startsStep(next, named) || startsStep(`${next} ${toks[i + 2]?.n}`, named))) {
+      let ahead = false;
+      for (let j = i + 1; j < toks.length && !toks[j].sep && !splitBeforeMove.has(toks[j].n) && !ahead; j++)
+        ahead = startsStep(toks[j].n, named) || startsStep(`${toks[j].n} ${toks[j + 1]?.n}`, named);
+      if (ahead) {
         tok.sep = true;
         named = null;
       }
     });
 
-    /** @type {((typeof toks)[number][] & { bang?: boolean })[]} */
+    /** @type {(typeof toks)[number][][]} */
     const clauses = [[]];
     for (const tok of toks) {
-      if (tok.sep) {
-        if (tok.bang) clauses[clauses.length - 1].bang = true;
-        clauses.push([]);
-      } else clauses[clauses.length - 1].push(tok);
+      if (tok.sep) clauses.push([]);
+      else clauses[clauses.length - 1].push(tok);
     }
 
     /** @type {Reading} */
     const out = { terrain: [], features: [], beats: [], spans: [], amb: [], unknown: [], fuzzy: [], trace: [] };
-    for (const tok of toks) if (tok.sep) out.trace.push({ s: tok.s, e: tok.e, text: tok.raw, kind: "split" });
+    for (const tok of toks)
+      if (tok.sep) out.trace.push({ s: tok.s, e: tok.e, text: tok.raw, kind: "split", clause: 0 });
     /** @type {Record<string, number>} */
     const seen = {};
-    for (const clause of clauses) {
+    for (const [ci, clause] of clauses.entries()) {
       /** @type {Item[]} */
       const items = [];
       for (let i = 0; i < clause.length; ) {
@@ -238,11 +257,15 @@ export function createInterpreter({ terms, words }) {
               ? { kind: "prep", role, ...at }
               : crux.has(w)
                 ? { kind: "crux", ...at }
-                : splitBeforeMove.has(w)
-                  ? { kind: "break", ...at }
-                  : stop.has(w) || ignored.has(w)
-                    ? { kind: "stop", ...at }
-                    : { kind: "unknown", raw: tok.raw, guess: tok.guess, ...at };
+                : moveWords.has(w)
+                  ? { kind: "move", region: /** @type {string} */ (moveWords.get(w)), ...at }
+                  : qualifiers.has(w)
+                    ? { kind: "qualifier", word: w, ...at }
+                    : splitBeforeMove.has(w)
+                      ? { kind: "break", ...at }
+                      : filler.has(w) || ignored.has(w)
+                        ? { kind: "filler", ...at }
+                        : { kind: "unknown", raw: tok.raw, guess: tok.guess, ...at };
         }
         items.push(m);
         out.trace.push({
@@ -250,6 +273,7 @@ export function createInterpreter({ terms, words }) {
           e: m.e,
           text: text.slice(m.s, m.e),
           kind: m.kind,
+          clause: 0,
           ...(m.kind === "term" ? { key: m.key, fuzzy: m.fz } : {}),
           ...(m.kind === "unknown" && m.guess ? { guess: m.guess } : {}),
         });
@@ -264,14 +288,17 @@ export function createInterpreter({ terms, words }) {
         pos: [],
         holds: [],
         order: [],
-        crux: !!clause.bang,
+        crux: false,
+        clause: ci,
         issues: [],
+        qualifiers: [],
       };
       for (const m of items)
         if (m.kind === "limb") {
           beat.side = m.side || beat.side;
           beat.part = m.part || beat.part;
-        }
+        } else if (m.kind === "move") beat.move = m.region;
+      if (beat.move && !beat.part) beat.part = REGION_PART[beat.move] ?? null;
       /** @type {string | null} */
       let role = null;
       /** @type {Term | null} */
@@ -279,6 +306,8 @@ export function createInterpreter({ terms, words }) {
       /** @type {Hold | null} */
       let last = null;
       let rockRun = false;
+      /** @type {string[]} */
+      let pendingQ = [];
       for (const m of items) {
         if (m.kind === "limb") {
           out.spans.push({ s: m.s, e: m.e, facet: "limb" });
@@ -287,10 +316,22 @@ export function createInterpreter({ terms, words }) {
         if (m.kind === "prep") {
           role = m.role;
           rockRun = false;
+          beat.qualifiers.push(...pendingQ);
+          pendingQ = [];
           continue;
         }
         if (m.kind === "crux") {
           beat.crux = true;
+          continue;
+        }
+        if (m.kind === "move") {
+          rockRun = false;
+          beat.qualifiers.push(...pendingQ);
+          pendingQ = [];
+          continue;
+        }
+        if (m.kind === "qualifier") {
+          pendingQ.push(m.word);
           continue;
         }
         if (m.kind === "break") {
@@ -332,17 +373,23 @@ export function createInterpreter({ terms, words }) {
           continue;
         }
         if (facet === "hold" || facet === "feature") {
-          if (rockRun && last) last.kinds.push(term);
-          else {
-            last = { role, ori: pendingOri, kinds: [term] };
+          if (rockRun && last) {
+            last.kinds.push(term);
+            last.qualifiers.push(...pendingQ);
+            if (m.plural) last.plural.push(term.id);
+          } else {
+            last = { role, ori: pendingOri, kinds: [term], qualifiers: pendingQ, plural: m.plural ? [term.id] : [] };
             beat.holds.push(last);
             beat.order.push({ kind: "hold", hold: last });
             pendingOri = null;
           }
+          pendingQ = [];
           rockRun = true;
           continue;
         }
         rockRun = false;
+        beat.qualifiers.push(...pendingQ);
+        pendingQ = [];
         if (beat.pos.includes(term) || beat.moves.includes(term)) continue;
         if (facet === "position") {
           beat.pos.push(term);
@@ -355,14 +402,21 @@ export function createInterpreter({ terms, words }) {
         }
       }
       if (pendingOri) {
-        const hold = { role, ori: pendingOri, kinds: [] };
+        const hold = { role, ori: pendingOri, kinds: [], qualifiers: pendingQ, plural: [] };
+        pendingQ = [];
         beat.holds.push(hold);
         beat.order.push({ kind: "hold", hold });
       }
-      for (const h of beat.holds) h.role ||= beat.moves.length ? "target" : "on";
+      beat.qualifiers.push(...pendingQ);
+      for (const h of beat.holds) h.role ||= beat.moves.length || beat.move ? "target" : "on";
       if (!beat.part && beat.pos.length) beat.part = beat.pos[0].part ?? null;
       if (!beat.part && beat.moves.some(m => m.region === "upper")) beat.part = "hand";
-      if (!beat.moves.length && !beat.pos.length && !beat.side) {
+      if (!beat.moves.length && !beat.pos.length && !beat.side && !beat.part) {
+        if (items.some(m => m.kind === "unknown")) {
+          beat.unread = true;
+          out.beats.push(beat);
+          continue;
+        }
         for (const h of beat.holds) for (const k of h.kinds) if (!out.features.includes(k)) out.features.push(k);
         if (beat.crux && out.beats.length) out.beats[out.beats.length - 1].crux = true;
         continue;
@@ -370,6 +424,11 @@ export function createInterpreter({ terms, words }) {
       out.beats.push(beat);
     }
     out.trace.sort((a, b) => a.s - b.s);
+    let clauseAt = 0;
+    for (const t of out.trace) {
+      if (t.kind === "split") clauseAt++;
+      t.clause = clauseAt;
+    }
     return out;
   }
 
