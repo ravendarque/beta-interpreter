@@ -109,6 +109,12 @@
       "match": ["lip"]
     },
     {
+      "id": "nose",
+      "name": "Nose",
+      "facets": ["feature"],
+      "match": ["nose"]
+    },
+    {
       "id": "arete",
       "name": "Arête",
       "facets": ["feature"],
@@ -557,7 +563,7 @@
       "facets": ["position"],
       "region": "lower",
       "part": "leg",
-      "match": ["compression", "leg compression"],
+      "match": ["compression", "leg compression", "squeeze", "squeezing"],
       "side": "both"
     },
     {

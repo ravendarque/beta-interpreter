@@ -16,6 +16,7 @@ import { facetOf } from "./interpreter.js";
  *   transition: Transition | null,
  *   end: State,
  *   crux: boolean,
+ *   cruxSource: "stated" | "inferred" | null,
  *   steps: number[],
  *   issues: string[],
  * }} Movement
@@ -192,13 +193,35 @@ export function toMovements(reading) {
     if (!moved) return;
     establish(moved.at);
     for (const key of moved.at.keys) if (end.limbs[key]) lastByPart[partOf(key)] = key;
-    movements.push({ start, transition: moved.transition, end, crux, steps, issues });
+    movements.push({
+      start,
+      transition: moved.transition,
+      end,
+      crux,
+      cruxSource: crux ? "stated" : null,
+      steps,
+      issues,
+    });
     start = emptyState();
     steps = [];
     crux = false;
     issues = [];
   });
 
-  if (steps.length) movements.push({ start, transition: null, end: emptyState(), crux, steps, issues });
+  if (steps.length)
+    movements.push({
+      start,
+      transition: null,
+      end: emptyState(),
+      crux,
+      cruxSource: crux ? "stated" : null,
+      steps,
+      issues,
+    });
+  const moves = movements.filter(m => m.transition);
+  if (moves.length === 1 && !movements.some(m => m.crux)) {
+    moves[0].crux = true;
+    moves[0].cruxSource = "inferred";
+  }
   return { terrain: reading.terrain, features: reading.features, movements };
 }

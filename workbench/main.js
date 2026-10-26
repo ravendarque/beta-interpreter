@@ -339,7 +339,10 @@ function renderMovementsCard() {
   $("c-movements").replaceChildren(
     h("dl", { class: "figures" }, [
       figure("Movements", m.movements),
-      figure("Crux", cruxAt >= 0 ? `#${cruxAt + 1}` : "none"),
+      figure(
+        rec.movements[cruxAt]?.cruxSource === "inferred" ? "Crux (inferred)" : "Crux",
+        cruxAt >= 0 ? `#${cruxAt + 1}` : "none",
+      ),
       figure("Inferred", m.inferred),
     ]),
     rec.movements.length
@@ -818,7 +821,7 @@ function detailMovements() {
             class: "mv-steps",
             text: steps.length > 1 ? `steps ${steps[0]}–${steps[steps.length - 1]}` : `step ${steps[0]}`,
           }),
-          m.crux ? h("span", { class: "crux-tag", text: "Crux" }) : "",
+          m.crux ? h("span", { class: "crux-tag", text: m.cruxSource === "inferred" ? "Crux, inferred" : "Crux" }) : "",
         ]),
         h("div", { class: "mv-body" }, [stateBlock(m.start, "Start"), tr, stateBlock(m.end, "End")]),
         ...m.issues.map(x => h("p", { class: "issue", text: x })),

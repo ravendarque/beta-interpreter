@@ -45,6 +45,13 @@
       "side": "both",
       "part": "foot"
     },
+    "leg": {
+      "part": "leg"
+    },
+    "legs": {
+      "side": "both",
+      "part": "leg"
+    },
     "knee": {
       "part": "leg"
     },

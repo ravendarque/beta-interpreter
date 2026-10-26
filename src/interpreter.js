@@ -94,7 +94,8 @@ function lev(a, b) {
 }
 
 /** @param {string | null} named @param {string | undefined} part */
-const fits = (named, part) => !named || !part || part === named || (named === "foot" && part === "leg");
+const fits = (named, part) =>
+  !named || !part || part === named || (named === "foot" && part === "leg") || (named === "leg" && part === "foot");
 
 /** @param {Vocabulary} vocabulary */
 export function createInterpreter({ terms, words }) {
@@ -165,11 +166,13 @@ export function createInterpreter({ terms, words }) {
     !!lookup(w);
 
   /** @param {string} key @param {string | null} named */
-  const startsStep = (key, named) =>
-    moveWords.has(key) ||
-    (lookup(key)?.senses ?? []).some(
-      s => facetOf(s) === "transition" || (facetOf(s) === "position" && !fits(named, s.part)),
-    );
+  const startsStep = (key, named) => {
+    if (moveWords.has(key)) return true;
+    const senses = lookup(key)?.senses ?? [];
+    if (senses.some(s => facetOf(s) === "transition")) return true;
+    const positions = senses.filter(s => facetOf(s) === "position");
+    return positions.length > 0 && positions.every(s => !fits(named, s.part));
+  };
 
   /**
    * @param {string} text
