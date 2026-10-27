@@ -91,6 +91,7 @@ describe("paraphrased sample betas", () => {
       features: ["Arête"],
       steps: ["Compression (hands).", "Jam (hand) on a crack.", "Flag.", "Paddle to a rail."],
       ambiguous: [
+        ["Squeeze", ["compression-hands", "compression-legs"]],
         ["compression", ["compression-hands", "compression-legs"]],
         ["jam", ["jam-hand", "jam-wedge"]],
       ],

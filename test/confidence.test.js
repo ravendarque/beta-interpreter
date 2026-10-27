@@ -21,6 +21,11 @@ describe("confidence", () => {
     expect(of("jam in the crack, then left hand heel hook")).toEqual({ score: 0.25, facts: 4 });
   });
 
+  it("counts an unrecognised word as nothing, but only once inside an unread step", () => {
+    expect(of("left hand on the jug wibble")).toEqual({ score: 2 / 3, facts: 3 });
+    expect(of("left hand on the jug. Wibble wobble.")).toEqual({ score: 2 / 3, facts: 3 });
+  });
+
   it("has no score when there is nothing to judge", () => {
     expect(of("")).toEqual({ score: null, facts: 0 });
   });

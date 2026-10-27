@@ -43,7 +43,7 @@ describe("toMovements", () => {
         },
         transition: { terms: ["fire-up"], limbs: ["rh"], side: "inferred" },
         end: { ...empty, limbs: { rh: { side: "inferred", hold: ["jug"], holdSource: "stated", techniques: [] } } },
-        crux: false,
+        crux: true,
       },
     ]);
   });
@@ -57,7 +57,7 @@ describe("toMovements", () => {
         },
         transition: { terms: ["bump"], limbs: ["lh"], side: "inferred" },
         end: { ...empty, limbs: { lh: { side: "inferred", hold: ["jug"], holdSource: "stated", techniques: [] } } },
-        crux: false,
+        crux: true,
       },
     ]);
   });
@@ -130,7 +130,7 @@ describe("toMovements", () => {
           ...empty,
           unplaced: [{ part: "hand", side: null, hold: ["jug"], holdSource: "stated", techniques: [] }],
         },
-        crux: false,
+        crux: true,
       },
     ]);
   });
@@ -157,7 +157,7 @@ describe("toMovements", () => {
           ...empty,
           unplaced: [{ part: "hand", side: null, hold: ["crimp"], holdSource: "stated", techniques: [] }],
         },
-        crux: false,
+        crux: true,
       },
     ]);
   });
@@ -170,6 +170,12 @@ describe("toMovements", () => {
 
   it("leaves a bump unplaced when nothing has moved before it", () => {
     expect(read("bump to the jug")[0].transition).toEqual({ terms: ["bump"], limbs: [], side: null });
+  });
+
+  it("keeps a stated crux stated, and infers none when there are several moves", () => {
+    const stated = toMovements(parse("dyno to the jug, crux"));
+    const several = toMovements(parse("dyno to the jug, then deadpoint to the crimp"));
+    expect([stated.movements[0].cruxSource, several.movements.map(m => m.crux)]).toEqual(["stated", [false, false]]);
   });
 
   it("keeps terrain and features at climb level", () => {
