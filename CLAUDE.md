@@ -8,7 +8,7 @@ This project branched off from a Climbing Logbook (CL) session on 2026-10-23. CL
 
 ## Working rules carried over from CL
 
-- **Decision IDs:** give every question or decision for Raven a numbered ID. Never reuse an ID. CL used up to 37, so start at 38.
+- **Decision IDs:** give every question or decision for Raven a numbered ID. Start at 1 in each new session, and never reset or reuse an ID within a session.
 - **Spelling:** British English in copy, docs and replies. Code identifiers stay as they are.
 - **Comments:** none in code by default. Allow one line only for a rare "why".
 - **Scope:** change only what Raven asks. Ask before widening the scope or rewording approved text.
