@@ -296,11 +296,17 @@ export function createInterpreter({ terms, words }) {
         issues: [],
         qualifiers: [],
       };
+      let limbRun = 0;
       for (const m of items)
         if (m.kind === "limb") {
-          beat.side = m.side || beat.side;
-          beat.part = m.part || beat.part;
-        } else if (m.kind === "move") beat.move = m.region;
+          if (limbRun === 2) continue;
+          limbRun = 1;
+          beat.side ||= m.side ?? null;
+          beat.part ||= m.part ?? null;
+        } else {
+          if (limbRun === 1) limbRun = 2;
+          if (m.kind === "move") beat.move = m.region;
+        }
       if (beat.move && !beat.part) beat.part = REGION_PART[beat.move] ?? null;
       /** @type {string | null} */
       let role = null;

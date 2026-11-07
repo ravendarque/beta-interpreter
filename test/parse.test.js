@@ -151,3 +151,26 @@ describe("parse", () => {
     expect(parse("")).toMatchObject({ beats: [], unknown: [], amb: [] });
   });
 });
+
+describe("the limb of a step", () => {
+  /** @param {string} text */
+  const limb = text => {
+    const b = parse(text).beats[0];
+    return [b.side, b.part];
+  };
+
+  it("comes from the first limb named, not a later hand that names a hold", () => {
+    expect(limb("Step through left foot to press on vertical edge between starting hand holds")).toEqual([
+      "left",
+      "foot",
+    ]);
+  });
+
+  it("is not changed by a side and hand named later as a location", () => {
+    expect(limb("Move left hand to left crimp above left of the right hand")).toEqual(["left", "hand"]);
+  });
+
+  it("is not changed by a side that says where the hold is", () => {
+    expect(limb("Move left hand to the crimp on the right")).toEqual(["left", "hand"]);
+  });
+});
